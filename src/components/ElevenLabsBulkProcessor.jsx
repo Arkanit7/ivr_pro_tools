@@ -10,6 +10,7 @@ import {
   Download,
   ShieldCheck,
 } from 'lucide-react'
+import {ElevenLabsClient} from '@elevenlabs/elevenlabs-js/wrapper'
 
 // Shadcn UI Components
 import {Button} from '@/components/ui/button'
@@ -20,32 +21,12 @@ import {Label} from '@/components/ui/label'
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
+const createElevenLabsClient = () => new ElevenLabsClient({apiKey: API_KEY})
+
 export default function ElevenLabsBulkProcessor() {
   const [file, setFile] = useState(null)
   const [status, setStatus] = useState('idle')
   const [progress, setProgress] = useState({current: 0, total: 0})
-
-  const testAPIConnection = async () => {
-    if (!API_KEY || API_KEY === 'your-api-key-here') {
-      alert('Please set your ElevenLabs API key in the .env file.')
-      return
-    }
-
-    if (!VOICE_ID) {
-      alert('Please set your ElevenLabs Voice ID in the .env file.')
-      return
-    }
-
-    try {
-      setStatus('testing')
-      await generateSpeech('Hello, this is a test.')
-      alert('✅ API connection successful! Your credentials are working.')
-      setStatus('idle')
-    } catch (error) {
-      alert(`❌ API test failed: ${error.message}`)
-      setStatus('idle')
-    }
-  }
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) setFile(e.target.files[0])
@@ -53,96 +34,36 @@ export default function ElevenLabsBulkProcessor() {
 
   const fetchAvailableVoices = async () => {
     try {
-      const response = await fetch('https://api.elevenlabs.io/v1/voices', {
-        headers: {
-          'xi-api-key': API_KEY,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch voices: ${response.status}`)
-      }
-
-      const data = await response.json()
-      return data.voices || []
+      const client = createElevenLabsClient()
+      const voiceResponse = await client.voices.getAll()
+      return voiceResponse.voices || []
     } catch (error) {
       console.error('Error fetching voices:', error)
       throw error
     }
   }
 
-  const showAvailableVoices = async () => {
-    try {
-      const voices = await fetchAvailableVoices()
-      const voiceList = voices
-        .map((voice) => `${voice.name} (ID: ${voice.voice_id})`)
-        .join('\n')
-
-      alert(
-        `Available voices:\n\n${voiceList}\n\nCopy a voice ID to use in your .env file.`,
-      )
-    } catch (error) {
-      alert(`Failed to fetch voices: ${error.message}`)
-    }
-  }
-
   const generateSpeech = async (text) => {
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=wav_32000`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'audio/wav',
-          'Content-Type': 'application/json',
-          'xi-api-key': API_KEY,
+    try {
+      const client = createElevenLabsClient()
+      const stream = await client.textToSpeech.convert(VOICE_ID, {
+        text,
+        modelId: 'eleven_multilingual_v2',
+        outputFormat: 'wav_32000',
+        languageCode: 'uk',
+        voice_settings: {
+          speed: 1.0,
+          stability: 0.75,
+          similarityBoost: 1,
+          useSpeakerBoost: true,
         },
-        body: JSON.stringify({
-          text: text,
-          model_id: 'eleven_multilingual_v2',
-          language_code: 'uk',
-          voice_settings: {
-            speed: 1.0,
-            stability: 0.75,
-            similarity_boost: 1,
-            use_speaker_boost: true,
-          },
-        }),
-      },
-    )
+      })
 
-    if (!response.ok) {
-      let errorMessage = `ElevenLabs API error: ${response.status}`
-
-      // Provide specific error messages for common status codes
-      switch (response.status) {
-        case 401:
-          errorMessage =
-            'Invalid API key. Please check your ElevenLabs API key.'
-          break
-        case 402:
-          errorMessage =
-            'Payment required. Please check your ElevenLabs account balance and billing status.'
-          break
-        case 429:
-          errorMessage =
-            'Rate limit exceeded. Please wait before making more requests.'
-          break
-        case 422:
-          errorMessage =
-            'Invalid request parameters. Please check your voice ID and text content.'
-          break
-        case 404:
-          errorMessage =
-            'Voice not found (404). The specified voice ID may not exist or may require a paid subscription. Please check your available voices.'
-          break
-        default:
-          errorMessage = `ElevenLabs API error: ${response.status} - ${response.statusText}`
-      }
-
-      throw new Error(errorMessage)
+      return await new Response(stream).blob()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`ElevenLabs API error: ${message}`)
     }
-
-    return await response.blob()
   }
 
   const startBulkGeneration = async () => {
@@ -289,7 +210,7 @@ export default function ElevenLabsBulkProcessor() {
               </>
             ) : status === 'complete' ? (
               <>
-                <Download className="mr-2 h-6 w-6" /> Re-download Pack
+                <Download className="mr-2 h-6 w-6" /> Re-generate Pack
               </>
             ) : (
               <>
