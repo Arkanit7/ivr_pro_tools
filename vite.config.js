@@ -22,17 +22,16 @@ export default defineConfig({
     react(),
     babel({presets: [reactCompilerPreset()]}),
     tailwindcss(),
-    viteSingleFile(),
+    viteSingleFile({removeViteModuleLoader: true}),
   ],
   base: './',
   build: {
     target: 'esnext',
     assetsInlineLimit: 100000000,
     chunkSizeWarningLimit: 100000000,
-    cssCodeSplit: false,
-    // rollupOptions: {
-    //   inlineDynamicImports: true,
-    // },
+    rollupOptions: {
+      cssCodeSplit: false,
+    },
   },
   define: {
     global: 'globalThis',
