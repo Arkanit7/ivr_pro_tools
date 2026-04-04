@@ -30,9 +30,9 @@ export default defineConfig({
     assetsInlineLimit: 100000000,
     chunkSizeWarningLimit: 100000000,
     cssCodeSplit: false,
-    rollupOptions: {
-      inlineDynamicImports: true,
-    },
+    // rollupOptions: {
+    //   inlineDynamicImports: true,
+    // },
   },
   define: {
     global: 'globalThis',
