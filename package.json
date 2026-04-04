@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@elevenlabs/react": "^1.0.2",
     "@fontsource-variable/roboto": "^5.2.10",
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",

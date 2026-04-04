@@ -246,12 +246,12 @@ export default function ElevenLabsBulkProcessor() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+    <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <Card className="w-full max-w-xl border-none shadow-xl">
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
-            <FileAudio className="h-8 w-8 text-indigo-600" />
-            IVR Voice Pack Generator
+            <FileAudio className="h-8 w-8 text-accent-foreground" />
+            Voice Pack Generator
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-8">
@@ -265,48 +265,20 @@ export default function ElevenLabsBulkProcessor() {
             />
             <label
               htmlFor="excel-upload"
-              className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-white py-10 transition-all hover:border-indigo-500 hover:bg-indigo-50/30"
+              className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-card py-10 transition-all hover:border-muted-foreground hover:bg-muted"
             >
-              <Upload className="mb-2 h-10 w-10 text-slate-400 group-hover:text-indigo-500" />
+              <Upload className="mb-2 h-10 w-10 group-hover:text-accent-foreground" />
               <span className="text-sm font-semibold">
                 {file ? file.name : 'Select IVR Script (Excel)'}
               </span>
-              <span className="mt-1 text-xs text-slate-400 italic">
+              <span className="mt-1 text-xs text-muted-foreground italic">
                 Col A: Filename | Col B: Script Text
               </span>
             </label>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="h-12 flex-1"
-              onClick={testAPIConnection}
-              disabled={status === 'processing' || status === 'testing'}
-            >
-              {status === 'testing' ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Testing...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="mr-2 h-4 w-4" /> Test API
-                </>
-              )}
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-12 flex-1"
-              onClick={showAvailableVoices}
-              disabled={status === 'processing' || status === 'testing'}
-            >
-              <FileAudio className="mr-2 h-4 w-4" /> Show Voices
-            </Button>
-          </div>
-
           <Button
-            className="h-12 w-full bg-indigo-600 text-lg transition-colors hover:bg-indigo-700"
+            className="h-12 w-full text-lg"
             disabled={status === 'processing' || status === 'testing' || !file}
             onClick={startBulkGeneration}
           >
