@@ -11,6 +11,13 @@ import {Slider} from '@/components/ui/slider'
 import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {Label} from '@/components/ui/label'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -37,6 +44,7 @@ export default function ElevenLabsBulkProcessor() {
   const [stability, setStability] = useState(0.75)
   const [similarityBoost, setSimilarityBoost] = useState(1)
   const [styleExaggeration, setStyleExaggeration] = useState(0)
+  const [applyTextNormalization, setApplyTextNormalization] = useState('on')
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) setFile(e.target.files[0])
@@ -47,6 +55,7 @@ export default function ElevenLabsBulkProcessor() {
     setStability(0.75)
     setSimilarityBoost(1)
     setStyleExaggeration(0)
+    setApplyTextNormalization('on')
   }
 
   const generateSpeech = async (text) => {
@@ -56,7 +65,9 @@ export default function ElevenLabsBulkProcessor() {
         text,
         modelId: 'eleven_multilingual_v2',
         outputFormat: 'wav_32000',
+        // outputFormat: 'alaw_8000',
         languageCode: 'uk',
+        applyTextNormalization,
         voiceSettings: {
           speed,
           stability,
@@ -321,6 +332,47 @@ export default function ElevenLabsBulkProcessor() {
                   step={0.01}
                 />
               </div>
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Label
+                      className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
+                      htmlFor="applyTextNormalization"
+                    >
+                      Text Normalization
+                    </Label>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      Controls whether the ElevenLabs client applies text
+                      normalization. Use "auto" for automatic behavior, "on" to
+                      force normalization, or "off" to disable it.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-sm text-muted-foreground capitalize">
+                  {applyTextNormalization}
+                </span>
+              </div>
+              <Select
+                value={applyTextNormalization}
+                onValueChange={(value) => setApplyTextNormalization(value)}
+              >
+                <SelectTrigger
+                  id="applyTextNormalization"
+                  aria-label="Text normalization"
+                >
+                  <SelectValue placeholder="Select mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="on">on</SelectItem>
+                  <SelectItem value="off">off</SelectItem>
+                  <SelectItem value="auto">auto</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Button
