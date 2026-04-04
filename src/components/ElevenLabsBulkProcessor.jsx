@@ -2,14 +2,7 @@ import React, {useState} from 'react'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
 import {saveAs} from 'file-saver'
-import {
-  FileAudio,
-  Upload,
-  Play,
-  Loader2,
-  Download,
-  ShieldCheck,
-} from 'lucide-react'
+import {FileAudio, Upload, Play, Loader2, Download} from 'lucide-react'
 import {ElevenLabsClient} from '@elevenlabs/elevenlabs-js/wrapper'
 
 // Shadcn UI Components
@@ -182,7 +175,7 @@ export default function ElevenLabsBulkProcessor() {
 
   return (
     <TooltipProvider>
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+      <div className="flex min-h-full items-center justify-center bg-background p-6">
         <Card className="w-full max-w-xl border-none shadow-xl">
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
