@@ -27,7 +27,7 @@ function App() {
             onClick={() => setCurrentView('excel')}
           >
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Excel Modifier
+            Excel Text Normalizer
           </Button>
           <Button
             variant={currentView === 'tts' ? 'default' : 'ghost'}
@@ -35,7 +35,7 @@ function App() {
             onClick={() => setCurrentView('tts')}
           >
             <FileAudio className="mr-2 h-4 w-4" />
-            Voice Generator
+            Excel to Voice
           </Button>
         </div>
       </div>

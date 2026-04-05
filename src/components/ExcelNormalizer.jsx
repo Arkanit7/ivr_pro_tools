@@ -49,7 +49,7 @@ export default function ExcelNormalizer() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileJson className="text-green-600" />
-            Excel Text Modifier
+            Excel Text Normalizer
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

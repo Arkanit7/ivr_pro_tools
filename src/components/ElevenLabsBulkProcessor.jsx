@@ -107,10 +107,17 @@ export default function ElevenLabsBulkProcessor() {
       const workbook = XLSX.read(buffer)
       const worksheet = workbook.Sheets[workbook.SheetNames[0]]
       const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1})
-      const rows = rawData.slice(1) // Skip header row
+      const allRows = rawData.slice(1) // Skip header row
+
+      // Filter out empty rows (rows with no text in the second column)
+      const rows = allRows.filter((row) => {
+        const [, text] = row
+        return text && text.toString().trim() !== ''
+      })
 
       console.log('Raw Excel data (first 5 rows):', rawData.slice(0, 5))
-      console.log('Total rows found (excluding header):', rows.length)
+      console.log('Total rows found (excluding header):', allRows.length)
+      console.log('Rows with content:', rows.length)
 
       setProgress({current: 0, total: rows.length})
 
@@ -120,11 +127,6 @@ export default function ElevenLabsBulkProcessor() {
       for (let i = 0; i < rows.length; i++) {
         const [fileName, text] = rows[i]
         console.log(`Processing row ${i + 1}:`, {fileName, text})
-
-        if (!text || text.toString().trim() === '') {
-          console.log(`Skipping row ${i + 1} - no text content`)
-          continue
-        }
 
         try {
           // Generate speech using direct API call
@@ -191,7 +193,7 @@ export default function ElevenLabsBulkProcessor() {
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
               <FileAudio className="h-8 w-8 text-accent-foreground" />
-              Voice Pack Generator
+              Excel to Voice
             </CardTitle>
           </CardHeader>
           <CardContent className="mt-2 space-y-4">
