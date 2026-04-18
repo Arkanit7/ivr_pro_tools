@@ -14,19 +14,19 @@ const navItems = [
     to: navigationRoutes.excelNormalizer,
     icon: FileSpreadsheet,
     label: 'Excel Normalizer',
-    variant: 'secondary',
+    variant: 'default',
   },
   {
     to: navigationRoutes.elevenlabsBulkProcessor,
     icon: FileAudio,
     label: 'Excel to Voice',
-    variant: 'ghost',
+    variant: 'default',
   },
 ]
 
 export default function HomeToolGrid() {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-2.5 sm:grid-cols-3">
       {navItems.map(({to, icon: Icon, label, variant}) => (
         <Button
           key={to}

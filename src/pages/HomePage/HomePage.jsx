@@ -7,7 +7,7 @@ export default function HomePage() {
     <div className="flex min-h-full items-center justify-center bg-background px-6 py-10">
       <div className="w-full max-w-4xl space-y-10">
         <Card>
-          <CardContent className="p-10">
+          <CardContent className="space-y-4 p-10">
             <HomeWelcome />
             <HomeToolGrid />
           </CardContent>
