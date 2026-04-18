@@ -1,5 +1,5 @@
 import {Button, buttonVariants} from '@/components/ui/button'
-import {NavLink} from 'react-router'
+import {Link, NavLink} from 'react-router'
 import {FileSpreadsheet, FileAudio, FileText} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import {navigationRoutes} from '@/router/navigation'
@@ -25,9 +25,12 @@ const navItems = [
 function Sidebar() {
   return (
     <div className="sticky top-0 flex h-screen w-64 flex-col gap-4 border-r border-border bg-background p-3">
-      <p className="pl-2.5 text-lg font-semibold text-foreground">
-        IVR Pro Tools
-      </p>
+      <Link
+        to={navigationRoutes.home}
+        className="pl-2.5 text-lg font-semibold text-foreground"
+      >
+        IVR Pro Tools <span className="text-xs text-muted-foreground">v2</span>
+      </Link>
       <nav className="">
         <ul className="space-y-0.5">
           {navItems.map(({to, icon: Icon, label}) => (
