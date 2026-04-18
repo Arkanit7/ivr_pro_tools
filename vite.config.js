@@ -12,7 +12,6 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [react(), babel({presets: [reactCompilerPreset()]}), tailwindcss()],
-  base: './',
   build: {
     target: 'esnext',
   },
