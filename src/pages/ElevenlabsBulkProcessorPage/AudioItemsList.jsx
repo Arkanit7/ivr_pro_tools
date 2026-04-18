@@ -1,5 +1,5 @@
 import {Button} from '@/components/ui/button'
-import {Card, CardContent} from '@/components/ui/card'
+import {Card} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
 import {Play, RotateCcw, Download, Loader2} from 'lucide-react'
 
@@ -12,8 +12,8 @@ export default function AudioItemsList({
   onUpdateText,
 }) {
   const handleTextChange = (itemId, newText) => {
-    if (newText.trim()) {
-      onUpdateText(itemId, newText.trim())
+    if (newText.trim() || newText === '') {
+      onUpdateText(itemId, newText)
     }
   }
 
@@ -42,8 +42,8 @@ export default function AudioItemsList({
               <div className="min-w-0 flex-1">
                 <div className="mb-1 truncate font-medium">{item.fileName}</div>
                 <Textarea
-                  defaultValue={item.text}
-                  onBlur={(e) => handleTextChange(item.id, e.target.value)}
+                  value={item.text}
+                  onChange={(e) => handleTextChange(item.id, e.target.value)}
                   className="min-h-[80px] resize-none"
                   placeholder="Enter text for TTS..."
                 />

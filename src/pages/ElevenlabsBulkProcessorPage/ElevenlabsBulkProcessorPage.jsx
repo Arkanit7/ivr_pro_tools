@@ -45,6 +45,7 @@ export default function ElevenlabsBulkProcessor() {
   const [styleExaggeration, setStyleExaggeration] = useState(0)
   const [applyTextNormalization, setApplyTextNormalization] = useState('on')
   const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false)
+  const [activeAudioId, setActiveAudioId] = useState(null)
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0]
@@ -120,14 +121,6 @@ export default function ElevenlabsBulkProcessor() {
     }
   }
 
-  const playAudio = (itemId) => {
-    const item = audioItems.find((item) => item.id === itemId)
-    if (item?.audioUrl) {
-      const audio = new Audio(item.audioUrl)
-      audio.play()
-    }
-  }
-
   const downloadIndividual = (itemId) => {
     const item = audioItems.find((item) => item.id === itemId)
     if (item?.audioBlob) {
@@ -136,6 +129,10 @@ export default function ElevenlabsBulkProcessor() {
         : `${item.fileName}.wav`
       saveAs(item.audioBlob, fileName)
     }
+  }
+
+  const onPlay = (itemId) => {
+    setActiveAudioId(itemId)
   }
 
   const downloadAll = async () => {
@@ -170,6 +167,10 @@ export default function ElevenlabsBulkProcessor() {
       ),
     )
   }
+
+  const activeAudioItem = audioItems.find(
+    (item) => item.id === activeAudioId && item.audioUrl,
+  )
 
   const generateSpeech = async (text) => {
     try {
@@ -225,7 +226,7 @@ export default function ElevenlabsBulkProcessor() {
 
   return (
     <TooltipProvider>
-      <div className="flex min-h-full items-center justify-center bg-background p-6">
+      <div className="flex min-h-full items-center justify-center bg-background p-6 pb-28">
         <Card className="w-full max-w-4xl border-none shadow-xl">
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
@@ -275,7 +276,7 @@ export default function ElevenlabsBulkProcessor() {
 
             <AudioItemsList
               items={audioItems}
-              onPlay={playAudio}
+              onPlay={onPlay}
               onRegenerate={generateIndividualAudio}
               onDownloadIndividual={downloadIndividual}
               onDownloadAll={downloadAll}
@@ -291,6 +292,27 @@ export default function ElevenlabsBulkProcessor() {
           </CardContent>
         </Card>
       </div>
+
+      {activeAudioItem && (
+        <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">
+                {activeAudioItem.fileName}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {activeAudioItem.text}
+              </p>
+            </div>
+            <audio
+              controls
+              autoPlay
+              src={activeAudioItem.audioUrl}
+              className="w-full max-w-2xl"
+            />
+          </div>
+        </div>
+      )}
     </TooltipProvider>
   )
 }
