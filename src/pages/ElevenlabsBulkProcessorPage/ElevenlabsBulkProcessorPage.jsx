@@ -15,6 +15,7 @@ import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
 import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNormalizationSelect'
 import FileUpload from '@/components/FileUpload'
 import GenerateButton from '@/pages/ElevenlabsBulkProcessorPage/GenerateButton'
+import AudioItemsList from '@/pages/ElevenlabsBulkProcessorPage/AudioItemsList'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
@@ -32,14 +33,48 @@ export default function ElevenlabsBulkProcessor() {
   const [file, setFile] = useState(null)
   const [status, setStatus] = useState('idle')
   const [progress, setProgress] = useState({current: 0, total: 0})
+  const [audioItems, setAudioItems] = useState([])
   const [speed, setSpeed] = useState(1.0)
   const [stability, setStability] = useState(0.75)
   const [similarityBoost, setSimilarityBoost] = useState(1)
   const [styleExaggeration, setStyleExaggeration] = useState(0)
   const [applyTextNormalization, setApplyTextNormalization] = useState('on')
 
-  const handleFileChange = (e) => {
-    if (e.target.files[0]) setFile(e.target.files[0])
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0]
+    setFile(selectedFile)
+    if (!selectedFile) {
+      setAudioItems([])
+      return
+    }
+
+    try {
+      const buffer = await selectedFile.arrayBuffer()
+      const workbook = XLSX.read(buffer)
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1})
+      const allRows = rawData.slice(1) // Skip header row
+
+      const rows = allRows.filter((row) => {
+        const [, text] = row
+        return text && text.toString().trim() !== ''
+      })
+
+      const items = rows.map(([fileName, text], index) => ({
+        id: index,
+        fileName: fileName ? fileName.toString().trim() : `prompt_${index + 1}`,
+        text: text.toString(),
+        status: 'pending',
+        audioBlob: null,
+        audioUrl: null,
+      }))
+
+      setAudioItems(items)
+    } catch (error) {
+      console.error('Error reading Excel file:', error)
+      alert('Error reading Excel file. Please check the format.')
+      setAudioItems([])
+    }
   }
 
   const resetToDefaults = () => {
@@ -48,6 +83,70 @@ export default function ElevenlabsBulkProcessor() {
     setSimilarityBoost(1)
     setStyleExaggeration(0)
     setApplyTextNormalization('on')
+  }
+
+  const generateIndividualAudio = async (itemId) => {
+    setAudioItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? {...item, status: 'processing'} : item,
+      ),
+    )
+
+    try {
+      const item = audioItems.find((item) => item.id === itemId)
+      const audioBlob = await generateSpeech(item.text)
+      const audioUrl = URL.createObjectURL(audioBlob)
+
+      setAudioItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId
+            ? {...item, status: 'complete', audioBlob, audioUrl}
+            : item,
+        ),
+      )
+    } catch (error) {
+      console.error(`Error generating audio for item ${itemId}:`, error)
+      setAudioItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? {...item, status: 'error'} : item,
+        ),
+      )
+    }
+  }
+
+  const playAudio = (itemId) => {
+    const item = audioItems.find((item) => item.id === itemId)
+    if (item?.audioUrl) {
+      const audio = new Audio(item.audioUrl)
+      audio.play()
+    }
+  }
+
+  const downloadIndividual = (itemId) => {
+    const item = audioItems.find((item) => item.id === itemId)
+    if (item?.audioBlob) {
+      const fileName = item.fileName.toLowerCase().endsWith('.wav')
+        ? item.fileName
+        : `${item.fileName}.wav`
+      saveAs(item.audioBlob, fileName)
+    }
+  }
+
+  const downloadAll = async () => {
+    const zip = new JSZip()
+
+    audioItems.forEach((item) => {
+      if (item.audioBlob) {
+        let fileName = item.fileName
+        if (!fileName.toLowerCase().endsWith('.wav')) {
+          fileName += '.wav'
+        }
+        zip.file(fileName, item.audioBlob)
+      }
+    })
+
+    const finalZip = await zip.generateAsync({type: 'blob'})
+    saveAs(finalZip, `prompt_pack_${formatDateForUkraine()}.zip`)
   }
 
   const generateSpeech = async (text) => {
@@ -91,97 +190,21 @@ export default function ElevenlabsBulkProcessor() {
     }
 
     setStatus('processing')
-    const zip = new JSZip()
+    setProgress({current: 0, total: audioItems.length})
 
-    try {
-      // 2. Read Excel Data
-      const buffer = await file.arrayBuffer()
-      const workbook = XLSX.read(buffer)
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-      const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1})
-      const allRows = rawData.slice(1) // Skip header row
-
-      // Filter out empty rows (rows with no text in the second column)
-      const rows = allRows.filter((row) => {
-        const [, text] = row
-        return text && text.toString().trim() !== ''
-      })
-
-      console.log('Raw Excel data (first 5 rows):', rawData.slice(0, 5))
-      console.log('Total rows found (excluding header):', allRows.length)
-      console.log('Rows with content:', rows.length)
-
-      setProgress({current: 0, total: rows.length})
-
-      let processedCount = 0
-
-      // 3. Process Rows Sequentially
-      for (let i = 0; i < rows.length; i++) {
-        const [fileName, text] = rows[i]
-        console.log(`Processing row ${i + 1}:`, {fileName, text})
-
-        try {
-          // Generate speech using direct API call
-          const audioBlob = await generateSpeech(text.toString())
-
-          // Use filename as-is, just ensure .wav extension
-          let safeName = fileName
-            ? fileName.toString().trim()
-            : `prompt_${i + 1}.wav`
-
-          // Add .wav extension if not present
-          if (!safeName.toLowerCase().endsWith('.wav')) {
-            safeName += '.wav'
-          }
-
-          // Ensure unique filenames
-          let counter = 1
-          const baseName = safeName.replace('.wav', '')
-          while (zip.file(safeName)) {
-            safeName = `${baseName}_${counter}.wav`
-            counter++
-          }
-
-          console.log(`Adding file to ZIP: ${safeName}`)
-          zip.file(safeName, audioBlob)
-          processedCount++
-
-          setProgress((prev) => ({...prev, current: processedCount}))
-        } catch (error) {
-          console.error(`Error processing row ${i + 1}:`, error)
-          // Continue with next row instead of stopping completely
-          continue
-        }
-      }
-
-      console.log(`Processing complete. Files added to ZIP: ${processedCount}`)
-
-      // 4. Finalize ZIP
-      console.log('Generating ZIP file...')
-      const finalZip = await zip.generateAsync({type: 'blob'})
-
-      // List all files in the ZIP
-      const zipContents = []
-      zip.forEach((relativePath, zipEntry) => {
-        if (!zipEntry.dir) {
-          zipContents.push(relativePath)
-        }
-      })
-      console.log('ZIP contents:', zipContents)
-
-      saveAs(finalZip, `prompt_pack_${formatDateForUkraine()}.zip`)
-      setStatus('complete')
-    } catch (error) {
-      console.error('TTS Error:', error)
-      alert('Error during generation. Check your API key and Voice ID.')
-      setStatus('idle')
+    // Process all items
+    for (let i = 0; i < audioItems.length; i++) {
+      await generateIndividualAudio(audioItems[i].id)
+      setProgress((prev) => ({...prev, current: i + 1}))
     }
+
+    setStatus('complete')
   }
 
   return (
     <TooltipProvider>
       <div className="flex min-h-full items-center justify-center bg-background p-6">
-        <Card className="w-full max-w-xl border-none shadow-xl">
+        <Card className="w-full max-w-4xl border-none shadow-xl">
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
               <FileAudio className="h-8 w-8 text-purple-600" />
@@ -214,6 +237,14 @@ export default function ElevenlabsBulkProcessor() {
             </Button>
 
             <FileUpload file={file} onFileChange={handleFileChange} />
+
+            <AudioItemsList
+              items={audioItems}
+              onPlay={playAudio}
+              onRegenerate={generateIndividualAudio}
+              onDownloadIndividual={downloadIndividual}
+              onDownloadAll={downloadAll}
+            />
 
             <GenerateButton
               status={status}

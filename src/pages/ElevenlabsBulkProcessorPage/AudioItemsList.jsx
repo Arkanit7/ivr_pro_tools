@@ -1,0 +1,89 @@
+import {Button} from '@/components/ui/button'
+import {Card, CardContent} from '@/components/ui/card'
+import {Play, RotateCcw, Download, Loader2} from 'lucide-react'
+
+export default function AudioItemsList({
+  items,
+  onPlay,
+  onRegenerate,
+  onDownloadIndividual,
+  onDownloadAll,
+}) {
+  const completedItems = items.filter((item) => item.status === 'complete')
+
+  return (
+    <div className="space-y-4">
+      {items.length > 0 && (
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">
+            Audio Items ({items.length})
+          </h3>
+          {completedItems.length > 0 && (
+            <Button onClick={onDownloadAll} variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Download All ({completedItems.length})
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="max-h-96 space-y-2 overflow-y-auto">
+        {items.map((item) => (
+          <Card key={item.id} className="p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">{item.fileName}</div>
+                <div className="truncate text-sm text-muted-foreground">
+                  {item.text}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {item.status === 'complete' && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onPlay(item.id)}
+                    >
+                      <Play className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onDownloadIndividual(item.id)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+
+                <Button
+                  size="sm"
+                  variant={
+                    item.status === 'processing' ? 'secondary' : 'outline'
+                  }
+                  onClick={() => onRegenerate(item.id)}
+                  disabled={item.status === 'processing'}
+                >
+                  {item.status === 'processing' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
+                </Button>
+
+                <div className="min-w-[60px] text-right text-xs text-muted-foreground">
+                  {item.status === 'pending' && 'Pending'}
+                  {item.status === 'processing' && 'Processing'}
+                  {item.status === 'complete' && 'Ready'}
+                  {item.status === 'error' && 'Error'}
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
