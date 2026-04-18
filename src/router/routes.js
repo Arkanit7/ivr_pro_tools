@@ -20,17 +20,17 @@ export default [
       {
         Component: TextNormalizerPage,
         path: ROUTES.TEXT_NORMALIZER,
-        handle: {title: 'Text Normalizer'},
+        handle: {title: 'Text Normalizer', icon: 'FileText'},
       },
       {
         Component: ExcelNormalizerPage,
         path: ROUTES.EXCEL_NORMALIZER,
-        handle: {title: 'Excel Normalizer'},
+        handle: {title: 'Excel Normalizer', icon: 'FileSpreadsheet'},
       },
       {
         Component: ElevenlabsBulkProcessorPage,
         path: ROUTES.ELEVENLABS_BULK_PROCESSOR,
-        handle: {title: 'Audio Converter'},
+        handle: {title: 'Excel to Voice', icon: 'FileAudio'},
       },
       // {Component: TypographyPage, path: ROUTES.TYPOGRAPHY},
       {Component: NotFoundPage, path: '*'},
