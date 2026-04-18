@@ -1,11 +1,10 @@
 import {ROUTES} from './navigation'
 import MainLayout from '@/layouts/MainLayout'
 import NotFoundPage from '@/pages/NotFoundPage'
-import HomePage from '@/pages/HomePage'
-// import TypographyPage from '@/pages/TypographyPage'
+import HomePage from '@/pages/HomePage/HomePage'
 import TextNormalizerPage from '@/pages/TextNormalizerPage'
 import ExcelNormalizerPage from '@/pages/ExcelNormalizerPage'
-import ElevenlabsBulkProcessorPage from '@/pages/ElevenlabsBulkProcessorPage'
+import ElevenlabsBulkProcessorPage from '@/pages/ElevenlabsBulkProcessorPage/ElevenlabsBulkProcessorPage'
 
 /** @type {import('react-router').RouteObject[]} */
 export default [
@@ -32,7 +31,6 @@ export default [
         path: ROUTES.ELEVENLABS_BULK_PROCESSOR,
         handle: {title: 'Excel to Voice', icon: 'FileAudio'},
       },
-      // {Component: TypographyPage, path: ROUTES.TYPOGRAPHY},
       {Component: NotFoundPage, path: '*'},
     ],
   },
