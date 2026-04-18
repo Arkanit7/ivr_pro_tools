@@ -11,7 +11,7 @@ export default function HomePage() {
           <p className="text-sm tracking-[0.35em] text-muted-foreground uppercase">
             Welcome to
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-foreground">
+          <h1 className="animate-gradient bg-linear-to-r from-blue-600 via-purple-600 to-indigo-600 bg-size-[200%] bg-clip-text text-4xl font-semibold tracking-tight text-transparent">
             IVR Pro Tools
           </h1>
           <p className="mx-auto max-w-2xl text-base leading-7 text-muted-foreground">
@@ -20,7 +20,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-2.5 sm:grid-cols-3">
           <Button asChild className="w-full justify-start gap-2">
             <Link to={navigationRoutes.textNormalizer}>
               <FileText className="h-4 w-4" />
