@@ -2,13 +2,18 @@ import {useState} from 'react'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
 import {saveAs} from 'file-saver'
-import {FileAudio} from 'lucide-react'
+import {FileAudio, ChevronDown} from 'lucide-react'
 import {ElevenLabsClient} from '@elevenlabs/elevenlabs-js/wrapper'
 
 // Shadcn UI Components
 import {Button} from '@/components/ui/button'
 import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {TooltipProvider} from '@/components/ui/tooltip'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 
 // Custom Components
 import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
@@ -39,6 +44,7 @@ export default function ElevenlabsBulkProcessor() {
   const [similarityBoost, setSimilarityBoost] = useState(1)
   const [styleExaggeration, setStyleExaggeration] = useState(0)
   const [applyTextNormalization, setApplyTextNormalization] = useState('on')
+  const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false)
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0]
@@ -149,6 +155,22 @@ export default function ElevenlabsBulkProcessor() {
     saveAs(finalZip, `prompt_pack_${formatDateForUkraine()}.zip`)
   }
 
+  const updateItemText = (itemId, newText) => {
+    setAudioItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              text: newText,
+              status: 'pending',
+              audioBlob: null,
+              audioUrl: null,
+            }
+          : item,
+      ),
+    )
+  }
+
   const generateSpeech = async (text) => {
     try {
       const client = createElevenLabsClient()
@@ -212,29 +234,42 @@ export default function ElevenlabsBulkProcessor() {
             </CardTitle>
           </CardHeader>
           <CardContent className="mt-2 space-y-4">
-            <VoiceSettings
-              speed={speed}
-              setSpeed={setSpeed}
-              stability={stability}
-              setStability={setStability}
-              similarityBoost={similarityBoost}
-              setSimilarityBoost={setSimilarityBoost}
-              styleExaggeration={styleExaggeration}
-              setStyleExaggeration={setStyleExaggeration}
-            />
-
-            <TextNormalizationSelect
-              applyTextNormalization={applyTextNormalization}
-              setApplyTextNormalization={setApplyTextNormalization}
-            />
-
-            <Button
-              variant="ghost"
-              onClick={resetToDefaults}
-              className="w-full"
+            <Collapsible
+              open={isVoiceSettingsOpen}
+              onOpenChange={setIsVoiceSettingsOpen}
             >
-              Reset to Defaults
-            </Button>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  Voice Settings
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4">
+                <VoiceSettings
+                  speed={speed}
+                  setSpeed={setSpeed}
+                  stability={stability}
+                  setStability={setStability}
+                  similarityBoost={similarityBoost}
+                  setSimilarityBoost={setSimilarityBoost}
+                  styleExaggeration={styleExaggeration}
+                  setStyleExaggeration={setStyleExaggeration}
+                />
+
+                <TextNormalizationSelect
+                  applyTextNormalization={applyTextNormalization}
+                  setApplyTextNormalization={setApplyTextNormalization}
+                />
+
+                <Button
+                  variant="ghost"
+                  onClick={resetToDefaults}
+                  className="w-full"
+                >
+                  Reset to Defaults
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
 
             <FileUpload file={file} onFileChange={handleFileChange} />
 
@@ -244,6 +279,7 @@ export default function ElevenlabsBulkProcessor() {
               onRegenerate={generateIndividualAudio}
               onDownloadIndividual={downloadIndividual}
               onDownloadAll={downloadAll}
+              onUpdateText={updateItemText}
             />
 
             <GenerateButton

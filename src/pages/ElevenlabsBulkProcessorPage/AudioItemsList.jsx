@@ -1,5 +1,6 @@
 import {Button} from '@/components/ui/button'
 import {Card, CardContent} from '@/components/ui/card'
+import {Textarea} from '@/components/ui/textarea'
 import {Play, RotateCcw, Download, Loader2} from 'lucide-react'
 
 export default function AudioItemsList({
@@ -8,7 +9,14 @@ export default function AudioItemsList({
   onRegenerate,
   onDownloadIndividual,
   onDownloadAll,
+  onUpdateText,
 }) {
+  const handleTextChange = (itemId, newText) => {
+    if (newText.trim()) {
+      onUpdateText(itemId, newText.trim())
+    }
+  }
+
   const completedItems = items.filter((item) => item.status === 'complete')
 
   return (
@@ -27,18 +35,21 @@ export default function AudioItemsList({
         </div>
       )}
 
-      <div className="max-h-96 space-y-2 overflow-y-auto">
+      <div className="space-y-2">
         {items.map((item) => (
           <Card key={item.id} className="p-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{item.fileName}</div>
-                <div className="truncate text-sm text-muted-foreground">
-                  {item.text}
-                </div>
+                <div className="mb-1 truncate font-medium">{item.fileName}</div>
+                <Textarea
+                  defaultValue={item.text}
+                  onBlur={(e) => handleTextChange(item.id, e.target.value)}
+                  className="min-h-[80px] resize-none"
+                  placeholder="Enter text for TTS..."
+                />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 {item.status === 'complete' && (
                   <>
                     <Button
