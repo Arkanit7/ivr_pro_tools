@@ -24,7 +24,7 @@ const navItems = [
 
 function Sidebar() {
   return (
-    <div className="flex h-screen w-64 flex-col gap-4 border-r border-border bg-background p-3">
+    <div className="sticky top-0 flex h-screen w-64 flex-col gap-4 border-r border-border bg-background p-3">
       <p className="pl-2.5 text-lg font-semibold text-foreground">
         IVR Pro Tools
       </p>
