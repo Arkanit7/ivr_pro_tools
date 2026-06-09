@@ -1,4 +1,4 @@
-import {createBrowserRouter} from 'react-router'
+import {createHashRouter} from 'react-router'
 import routes from './routes'
 
-export default createBrowserRouter(routes)
+export default createHashRouter(routes)
