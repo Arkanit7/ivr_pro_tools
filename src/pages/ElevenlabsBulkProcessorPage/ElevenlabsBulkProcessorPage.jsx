@@ -92,43 +92,59 @@ export default function ElevenlabsBulkProcessor() {
     setApplyTextNormalization('on')
   }
 
-  const generateIndividualAudio = async (itemId) => {
+  const generateGroupAudio = async (itemIds) => {
     setAudioItems((prev) =>
       prev.map((item) =>
-        item.id === itemId ? {...item, status: 'processing'} : item,
+        itemIds.includes(item.id) ? {...item, status: 'processing'} : item,
       ),
     )
 
     try {
-      const item = audioItems.find((item) => item.id === itemId)
-      const audioBlob = await generateSpeech(item.text)
+      const sourceItem = audioItems.find((item) => item.id === itemIds[0])
+      const audioBlob = await generateSpeech(sourceItem.text)
       const audioUrl = URL.createObjectURL(audioBlob)
 
       setAudioItems((prev) =>
         prev.map((item) =>
-          item.id === itemId
+          itemIds.includes(item.id)
             ? {...item, status: 'complete', audioBlob, audioUrl}
             : item,
         ),
       )
     } catch (error) {
-      console.error(`Error generating audio for item ${itemId}:`, error)
+      console.error(`Error generating audio for group ${itemIds}:`, error)
       setAudioItems((prev) =>
         prev.map((item) =>
-          item.id === itemId ? {...item, status: 'error'} : item,
+          itemIds.includes(item.id) ? {...item, status: 'error'} : item,
         ),
       )
     }
   }
 
-  const downloadIndividual = (itemId) => {
-    const item = audioItems.find((item) => item.id === itemId)
-    if (item?.audioBlob) {
+  const downloadGroup = async (itemIds) => {
+    const groupItems = audioItems.filter(
+      (item) => itemIds.includes(item.id) && item.audioBlob,
+    )
+    if (groupItems.length === 0) return
+
+    if (groupItems.length === 1) {
+      const item = groupItems[0]
       const fileName = item.fileName.toLowerCase().endsWith('.wav')
         ? item.fileName
         : `${item.fileName}.wav`
       saveAs(item.audioBlob, fileName)
+      return
     }
+
+    const zip = new JSZip()
+    groupItems.forEach((item) => {
+      const fileName = item.fileName.toLowerCase().endsWith('.wav')
+        ? item.fileName
+        : `${item.fileName}.wav`
+      zip.file(fileName, item.audioBlob)
+    })
+    const blob = await zip.generateAsync({type: 'blob'})
+    saveAs(blob, `${groupItems[0].fileName}_group.zip`)
   }
 
   const onPlay = (itemId) => {
@@ -212,12 +228,22 @@ export default function ElevenlabsBulkProcessor() {
       return
     }
 
-    setStatus('processing')
-    setProgress({current: 0, total: audioItems.length})
+    const uniqueGroups = []
+    const seen = new Set()
+    for (const item of audioItems) {
+      if (!seen.has(item.text)) {
+        seen.add(item.text)
+        uniqueGroups.push(
+          audioItems.filter((i) => i.text === item.text).map((i) => i.id),
+        )
+      }
+    }
 
-    // Process all items
-    for (let i = 0; i < audioItems.length; i++) {
-      await generateIndividualAudio(audioItems[i].id)
+    setStatus('processing')
+    setProgress({current: 0, total: uniqueGroups.length})
+
+    for (let i = 0; i < uniqueGroups.length; i++) {
+      await generateGroupAudio(uniqueGroups[i])
       setProgress((prev) => ({...prev, current: i + 1}))
     }
 
@@ -278,8 +304,8 @@ export default function ElevenlabsBulkProcessor() {
               items={audioItems}
               activeAudioId={activeAudioId}
               onPlay={onPlay}
-              onRegenerate={generateIndividualAudio}
-              onDownloadIndividual={downloadIndividual}
+              onRegenerate={generateGroupAudio}
+              onDownloadGroup={downloadGroup}
               onDownloadAll={downloadAll}
               onUpdateText={updateItemText}
             />
