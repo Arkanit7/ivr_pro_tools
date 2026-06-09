@@ -2,7 +2,7 @@ export const ROUTES = {
   HOME: '',
   TEXT_NORMALIZER: 'text-normalizer',
   EXCEL_NORMALIZER: 'excel-normalizer',
-  ELEVENLABS_BULK_PROCESSOR: 'elevenlabs-bulk-processor',
+  ELEVENLABS_BULK_PROCESSOR: 'excel-to-voice',
   TYPOGRAPHY: 'typography',
 }
 
