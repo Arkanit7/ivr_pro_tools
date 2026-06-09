@@ -210,8 +210,9 @@ export default function ElevenlabsBulkProcessor() {
       }
     })
 
+    const baseName = file.name.replace(/\.[^.]+$/, '')
     const finalZip = await zip.generateAsync({type: 'blob'})
-    saveAs(finalZip, `prompt_pack_${formatDateForUkraine()}.zip`)
+    saveAs(finalZip, `${baseName}_${formatDateForUkraine()}.zip`)
   }
 
   const updateItemText = (itemId, newText) => {
