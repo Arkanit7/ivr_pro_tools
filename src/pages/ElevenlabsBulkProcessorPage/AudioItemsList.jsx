@@ -1,7 +1,7 @@
 import {Button} from '@/components/ui/button'
 import {Card} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
-import {Play, RotateCcw, Download, Loader2} from 'lucide-react'
+import {Play, Pause, RotateCcw, Download, Loader2} from 'lucide-react'
 
 function groupByText(items) {
   const map = new Map()
@@ -23,7 +23,9 @@ function getGroupStatus(groupItems) {
 export default function AudioItemsList({
   items,
   activeAudioId,
+  isPlaying,
   onPlay,
+  onPlayAll,
   onRegenerate,
   onDownloadGroup,
   onDownloadAll,
@@ -40,10 +42,16 @@ export default function AudioItemsList({
             Audio Items ({items.length})
           </h3>
           {completedItems.length > 0 && (
-            <Button onClick={onDownloadAll} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Download All ({completedItems.length})
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={onPlayAll} variant="outline">
+                <Play className="mr-2 h-4 w-4" />
+                Play All
+              </Button>
+              <Button onClick={onDownloadAll} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Download All ({completedItems.length})
+              </Button>
+            </div>
           )}
         </div>
       )}
@@ -85,7 +93,9 @@ export default function AudioItemsList({
                         variant="outline"
                         onClick={() => onPlay(playableItem.id)}
                       >
-                        <Play className="h-4 w-4" />
+                        {isPlaying && playableItem.id === activeAudioId
+                          ? <Pause className="h-4 w-4" />
+                          : <Play className="h-4 w-4" />}
                       </Button>
                       <Button
                         size="sm"

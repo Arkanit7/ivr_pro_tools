@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, useRef} from 'react'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
 import {saveAs} from 'file-saver'
@@ -46,6 +46,10 @@ export default function ElevenlabsBulkProcessor() {
   const [applyTextNormalization, setApplyTextNormalization] = useState('on')
   const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false)
   const [activeAudioId, setActiveAudioId] = useState(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playKey, setPlayKey] = useState(0)
+  const playQueueRef = useRef([])
+  const audioRef = useRef(null)
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0]
@@ -148,7 +152,49 @@ export default function ElevenlabsBulkProcessor() {
   }
 
   const onPlay = (itemId) => {
-    setActiveAudioId(itemId)
+    if (activeAudioId === itemId) {
+      if (isPlaying) {
+        audioRef.current?.pause()
+      } else if (audioRef.current?.ended) {
+        setPlayKey((k) => k + 1)
+      } else {
+        audioRef.current?.play()
+      }
+    } else {
+      playQueueRef.current = []
+      setActiveAudioId(itemId)
+      setPlayKey((k) => k + 1)
+    }
+  }
+
+  const onPlayAll = () => {
+    const queue = []
+    const seen = new Set()
+    for (const item of audioItems) {
+      if (!seen.has(item.text) && item.audioUrl) {
+        seen.add(item.text)
+        queue.push(item.id)
+      }
+    }
+    playQueueRef.current = queue
+    if (queue.length > 0) {
+      setActiveAudioId(queue[0])
+      setPlayKey((k) => k + 1)
+    }
+  }
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false)
+    const queue = playQueueRef.current
+    if (!queue.length) return
+    const nextIndex = queue.indexOf(activeAudioId) + 1
+    if (nextIndex < queue.length) {
+      setActiveAudioId(queue[nextIndex])
+      setPlayKey((k) => k + 1)
+    } else {
+      playQueueRef.current = []
+      setActiveAudioId(null)
+    }
   }
 
   const downloadAll = async () => {
@@ -303,7 +349,9 @@ export default function ElevenlabsBulkProcessor() {
             <AudioItemsList
               items={audioItems}
               activeAudioId={activeAudioId}
+              isPlaying={isPlaying}
               onPlay={onPlay}
+              onPlayAll={onPlayAll}
               onRegenerate={generateGroupAudio}
               onDownloadGroup={downloadGroup}
               onDownloadAll={downloadAll}
@@ -332,9 +380,14 @@ export default function ElevenlabsBulkProcessor() {
               </p>
             </div>
             <audio
+              ref={audioRef}
+              key={playKey}
               controls
               autoPlay
               src={activeAudioItem.audioUrl}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={handleAudioEnded}
               className="w-full max-w-2xl"
             />
           </div>
