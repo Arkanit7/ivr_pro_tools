@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {Upload} from 'lucide-react'
 
 export default function FileUpload({
@@ -6,6 +7,16 @@ export default function FileUpload({
   defaultText = 'Select IVR Script (Excel)',
   instructionText = 'Col A: Filename | Col B: Script Text',
 }) {
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files.length) {
+      onFileChange({target: {files: e.dataTransfer.files}})
+    }
+  }
+
   return (
     <div className="group relative">
       <input
@@ -17,9 +28,17 @@ export default function FileUpload({
       />
       <label
         htmlFor="excel-upload"
-        className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-card py-10 transition-all hover:border-muted-foreground hover:bg-muted"
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+        onDragEnter={(e) => { e.preventDefault(); setIsDragging(true) }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-10 transition-all ${
+          isDragging
+            ? 'border-primary bg-primary/5'
+            : 'border-border bg-card hover:border-muted-foreground hover:bg-muted'
+        }`}
       >
-        <Upload className="mb-2 h-10 w-10 group-hover:text-accent-foreground" />
+        <Upload className={`mb-2 h-10 w-10 ${isDragging ? 'text-primary' : 'group-hover:text-accent-foreground'}`} />
         <span className="text-sm font-semibold">
           {file ? file.name : defaultText}
         </span>
