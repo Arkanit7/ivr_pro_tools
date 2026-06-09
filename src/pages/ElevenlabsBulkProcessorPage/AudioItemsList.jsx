@@ -39,17 +39,17 @@ export default function AudioItemsList({
       {items.length > 0 && (
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
-            Audio Items ({items.length})
+            Аудіофайли ({items.length})
           </h3>
           {completedItems.length > 0 && (
             <div className="flex gap-2">
               <Button onClick={onPlayAll} variant="outline">
                 <Play className="mr-2 h-4 w-4" />
-                Play All
+                Відтворити все
               </Button>
               <Button onClick={onDownloadAll} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
-                Download All ({completedItems.length})
+                Завантажити все ({completedItems.length})
               </Button>
             </div>
           )}
@@ -81,7 +81,7 @@ export default function AudioItemsList({
                       )
                     }
                     className="min-h-20 resize-none"
-                    placeholder="Enter text for TTS..."
+                    placeholder="Введіть текст для TTS..."
                   />
                 </div>
 
@@ -97,10 +97,10 @@ export default function AudioItemsList({
                             : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                     }`}
                   >
-                    {status === 'pending' && 'Pending'}
-                    {status === 'processing' && 'Process'}
-                    {status === 'complete' && 'Ready'}
-                    {status === 'error' && 'Error'}
+                    {status === 'pending' && 'Очікує'}
+                    {status === 'processing' && 'Обробка'}
+                    {status === 'complete' && 'Готово'}
+                    {status === 'error' && 'Помилка'}
                   </span>
 
                   {status === 'complete' && (

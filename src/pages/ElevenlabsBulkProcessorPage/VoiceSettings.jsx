@@ -22,15 +22,14 @@ export default function VoiceSettings({
                 className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
                 htmlFor="speed"
               >
-                Speed
+                Швидкість
               </Label>
             </TooltipTrigger>
             <TooltipContent>
               <p>
-                Controls the speed of the generated speech. Values below 1.0
-                will slow down the speech, while values above 1.0 will speed it
-                up. Extreme values may affect the quality of the generated
-                speech.
+                Контролює швидкість мовлення. Значення нижче 1.0 сповільнюють,
+                вище 1.0 — прискорюють. Екстремальні значення можуть знизити
+                якість генерації.
               </p>
             </TooltipContent>
           </Tooltip>
@@ -56,14 +55,14 @@ export default function VoiceSettings({
                 className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
                 htmlFor="stability"
               >
-                Stability
+                Стабільність
               </Label>
             </TooltipTrigger>
             <TooltipContent>
               <p>
-                Increasing stability will make the voice more consistent between
-                re-generations, but it can also make it sounds a bit monotone.
-                On longer text fragments we recommend lowering this value.
+                Вища стабільність робить голос консистентнішим між
+                генераціями, але може звучати монотонно. Для довгих текстів
+                рекомендуємо знижувати це значення.
               </p>
             </TooltipContent>
           </Tooltip>
@@ -89,14 +88,13 @@ export default function VoiceSettings({
                 className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
                 htmlFor="similarityBoost"
               >
-                Similarity Boost
+                Схожість
               </Label>
             </TooltipTrigger>
             <TooltipContent>
               <p>
-                High enhancement boosts overall voice clarity and target speaker
-                similarity. Very high values can cause artifacts, so adjusting
-                this setting to find the optimal value is encouraged.
+                Висока схожість покращує чіткість голосу та відповідність
+                оригіналу. Дуже високі значення можуть спричинити артефакти.
               </p>
             </TooltipContent>
           </Tooltip>
@@ -122,16 +120,14 @@ export default function VoiceSettings({
                 className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
                 htmlFor="styleExaggeration"
               >
-                Style Exaggeration
+                Стиль
               </Label>
             </TooltipTrigger>
             <TooltipContent>
               <p>
-                High values are recommended if the style of the speech should be
-                exaggerated compared to the uploaded audio. Higher values can
-                lead to more instability in the generated speech. Setting this
-                to 0.0 will greatly increase generation speed and is the default
-                setting.
+                Високі значення підкреслюють стиль мовлення. Можуть спричинити
+                нестабільність генерації. Значення 0.0 — стандартне та значно
+                прискорює генерацію.
               </p>
             </TooltipContent>
           </Tooltip>

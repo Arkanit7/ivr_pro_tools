@@ -10,16 +10,16 @@ export default function GenerateButton({status, progress, file, onClick}) {
     >
       {status === 'processing' ? (
         <>
-          <Loader2 className="mr-2 h-6 w-6 animate-spin" /> Processing{' '}
+          <Loader2 className="mr-2 h-6 w-6 animate-spin" /> Обробка{' '}
           {progress.current}/{progress.total}
         </>
       ) : status === 'complete' ? (
         <>
-          <Download className="mr-2 h-6 w-6" /> Re-generate Pack
+          <Download className="mr-2 h-6 w-6" /> Перегенерувати пак
         </>
       ) : (
         <>
-          <Play className="mr-2 h-6 w-6 fill-current" /> Generate All Prompts
+          <Play className="mr-2 h-6 w-6 fill-current" /> Генерувати всі промпти
         </>
       )}
     </Button>

@@ -4,8 +4,8 @@ import {Upload} from 'lucide-react'
 export default function FileUpload({
   file,
   onFileChange,
-  defaultText = 'Select IVR Script (Excel)',
-  instructionText = 'Col A: Filename | Col B: Script Text',
+  defaultText = 'Оберіть IVR скрипт (Excel)',
+  instructionText = 'Стовп A: Назва файлу | Стовп B: Текст скрипту',
 }) {
   const [isDragging, setIsDragging] = useState(false)
 

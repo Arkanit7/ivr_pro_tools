@@ -7,19 +7,19 @@ const navItems = [
   {
     to: navigationRoutes.textNormalizer,
     icon: FileText,
-    label: 'Text Normalizer',
+    label: 'Нормалізатор тексту',
     variant: 'default',
   },
   {
     to: navigationRoutes.excelNormalizer,
     icon: FileSpreadsheet,
-    label: 'Excel Normalizer',
+    label: 'Нормалізатор Excel',
     variant: 'default',
   },
   {
     to: navigationRoutes.elevenlabsBulkProcessor,
     icon: FileAudio,
-    label: 'Excel to Voice',
+    label: 'Excel у голос',
     variant: 'default',
   },
 ]

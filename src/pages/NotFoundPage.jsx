@@ -13,17 +13,17 @@ function NotFoundPage() {
             <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">
-            Page Not Found
+            Сторінку не знайдено
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-muted-foreground">
-            The page you're looking for doesn't exist or has been moved.
+            Сторінка, яку ви шукаєте, не існує або була переміщена.
           </p>
           <Button asChild className="w-full">
             <Link to={navigationRoutes.home}>
               <Home className="mr-2 h-4 w-4" />
-              Go Home
+              На головну
             </Link>
           </Button>
         </CardContent>
