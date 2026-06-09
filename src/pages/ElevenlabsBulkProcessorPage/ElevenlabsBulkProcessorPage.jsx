@@ -40,6 +40,7 @@ export default function ElevenlabsBulkProcessor() {
   const [status, setStatus] = useState('idle')
   const [progress, setProgress] = useState({current: 0, total: 0})
   const [audioItems, setAudioItems] = useState([])
+  const [audioItemGroups, setAudioItemGroups] = useState([])
   const [speed, setSpeed] = useLocalStorage('vs_speed', 1.0)
   const [stability, setStability] = useLocalStorage('vs_stability', 0.75)
   const [similarityBoost, setSimilarityBoost] = useLocalStorage('vs_similarityBoost', 1)
@@ -57,6 +58,7 @@ export default function ElevenlabsBulkProcessor() {
     setFile(selectedFile)
     if (!selectedFile) {
       setAudioItems([])
+      setAudioItemGroups([])
       return
     }
 
@@ -81,6 +83,12 @@ export default function ElevenlabsBulkProcessor() {
         audioUrl: null,
       }))
 
+      const groupMap = new Map()
+      for (const item of items) {
+        if (!groupMap.has(item.text)) groupMap.set(item.text, [])
+        groupMap.get(item.text).push(item.id)
+      }
+      setAudioItemGroups([...groupMap.values()])
       setAudioItems(items)
     } catch (error) {
       console.error('Error reading Excel file:', error)
@@ -357,6 +365,7 @@ export default function ElevenlabsBulkProcessor() {
 
             <AudioItemsList
               items={audioItems}
+              groups={audioItemGroups}
               activeAudioId={activeAudioId}
               isPlaying={isPlaying}
               onPlay={onPlay}
