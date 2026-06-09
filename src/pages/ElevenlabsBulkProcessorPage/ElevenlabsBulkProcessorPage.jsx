@@ -346,6 +346,13 @@ export default function ElevenlabsBulkProcessor() {
 
             <FileUpload file={file} onFileChange={handleFileChange} />
 
+            <GenerateButton
+              status={status}
+              progress={progress}
+              file={file}
+              onClick={startBulkGeneration}
+            />
+
             <AudioItemsList
               items={audioItems}
               activeAudioId={activeAudioId}
@@ -356,13 +363,6 @@ export default function ElevenlabsBulkProcessor() {
               onDownloadGroup={downloadGroup}
               onDownloadAll={downloadAll}
               onUpdateText={updateItemText}
-            />
-
-            <GenerateButton
-              status={status}
-              progress={progress}
-              file={file}
-              onClick={startBulkGeneration}
             />
           </CardContent>
         </Card>
