@@ -276,6 +276,7 @@ export default function ElevenlabsBulkProcessor() {
 
             <AudioItemsList
               items={audioItems}
+              activeAudioId={activeAudioId}
               onPlay={onPlay}
               onRegenerate={generateIndividualAudio}
               onDownloadIndividual={downloadIndividual}

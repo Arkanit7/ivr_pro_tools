@@ -5,6 +5,7 @@ import {Play, RotateCcw, Download, Loader2} from 'lucide-react'
 
 export default function AudioItemsList({
   items,
+  activeAudioId,
   onPlay,
   onRegenerate,
   onDownloadIndividual,
@@ -37,19 +38,22 @@ export default function AudioItemsList({
 
       <div className="space-y-2">
         {items.map((item) => (
-          <Card key={item.id} className="p-4">
+          <Card
+            key={item.id}
+            className={`p-4 transition-colors ${item.id === activeAudioId ? 'ring-primary' : ''}`}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="mb-1 truncate font-medium">{item.fileName}</div>
                 <Textarea
                   value={item.text}
                   onChange={(e) => handleTextChange(item.id, e.target.value)}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-20 resize-none"
                   placeholder="Enter text for TTS..."
                 />
               </div>
 
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 {item.status === 'complete' && (
                   <>
                     <Button
@@ -84,7 +88,7 @@ export default function AudioItemsList({
                   )}
                 </Button>
 
-                <div className="min-w-[60px] text-right text-xs text-muted-foreground">
+                <div className="min-w-15 text-right text-xs text-muted-foreground">
                   {item.status === 'pending' && 'Pending'}
                   {item.status === 'processing' && 'Processing'}
                   {item.status === 'complete' && 'Ready'}
