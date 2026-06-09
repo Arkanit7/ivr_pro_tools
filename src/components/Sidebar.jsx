@@ -29,8 +29,7 @@ function Sidebar() {
         to={navigationRoutes.home}
         className="pl-2.5 text-lg font-semibold text-foreground"
       >
-        IVR Pro Tools{' '}
-        <span className="text-xs text-muted-foreground">v2.1</span>
+        IVR Pro Tools <span className="text-xs text-muted-foreground">v3</span>
       </Link>
       <nav className="">
         <ul className="space-y-0.5">
