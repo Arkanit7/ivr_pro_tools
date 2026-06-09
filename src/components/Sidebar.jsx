@@ -8,17 +8,17 @@ const navItems = [
   {
     to: navigationRoutes.textNormalizer,
     icon: FileText,
-    label: 'Text Normalizer',
+    label: 'Нормалізатор тексту',
   },
   {
     to: navigationRoutes.excelNormalizer,
     icon: FileSpreadsheet,
-    label: 'Excel Text Normalizer',
+    label: 'Нормалізатор Excel',
   },
   {
     to: navigationRoutes.elevenlabsBulkProcessor,
     icon: FileAudio,
-    label: 'Excel to Voice',
+    label: 'Excel у голос',
   },
 ]
 
@@ -29,7 +29,8 @@ function Sidebar() {
         to={navigationRoutes.home}
         className="pl-2.5 text-lg font-semibold text-foreground"
       >
-        IVR Pro Tools <span className="text-xs text-muted-foreground">v2</span>
+        IVR Pro Tools{' '}
+        <span className="text-xs text-muted-foreground">v2.1</span>
       </Link>
       <nav className="">
         <ul className="space-y-0.5">

@@ -262,16 +262,16 @@ export default function ElevenlabsBulkProcessor() {
   }
 
   const startBulkGeneration = async () => {
-    if (!file) return alert('Please provide an Excel file.')
+    if (!file) return alert('Будь ласка, завантажте Excel файл.')
 
     // Validate API credentials
     if (!API_KEY || API_KEY === 'your-api-key-here') {
-      alert('Please set your ElevenLabs API key in the .env file.')
+      alert('Вкажіть API ключ ElevenLabs у файлі .env.')
       return
     }
 
     if (!VOICE_ID) {
-      alert('Please set your ElevenLabs Voice ID in the .env file.')
+      alert('Вкажіть Voice ID ElevenLabs у файлі .env.')
       return
     }
 
@@ -304,7 +304,7 @@ export default function ElevenlabsBulkProcessor() {
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
               <FileAudio className="h-8 w-8 text-purple-600" />
-              Excel to Voice
+              Excel у голос
             </CardTitle>
           </CardHeader>
           <CardContent className="mt-2 space-y-4">
@@ -314,7 +314,7 @@ export default function ElevenlabsBulkProcessor() {
             >
               <CollapsibleTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  Voice Settings
+                  Налаштування голосу
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />
                 </Button>
               </CollapsibleTrigger>
@@ -340,7 +340,7 @@ export default function ElevenlabsBulkProcessor() {
                   onClick={resetToDefaults}
                   className="w-full"
                 >
-                  Reset to Defaults
+                  Скинути до стандартних
                 </Button>
               </CollapsibleContent>
             </Collapsible>

@@ -44,10 +44,10 @@ export default function TextNormalizerPage() {
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
             <FileText className="h-8 w-8 text-blue-500" />
-            Text Normalizer
+            Нормалізатор тексту
           </CardTitle>
           <CardDescription>
-            Converts raw script text to TTS-friendly format
+            Перетворює сирий текст промпта у формат, придатний для TTS
           </CardDescription>
         </CardHeader>
 
@@ -55,14 +55,14 @@ export default function TextNormalizerPage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="input-text">Raw Text</Label>
+                <Label htmlFor="input-text">Вихідний текст</Label>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {inputText.length} chars
+                  {inputText.length} симв.
                 </span>
               </div>
               <Textarea
                 id="input-text"
-                placeholder="Paste your raw text here..."
+                placeholder="Вставте вихідний текст тут..."
                 value={inputText}
                 onChange={handleInputChange}
                 className="min-h-75 resize-none"
@@ -71,14 +71,14 @@ export default function TextNormalizerPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="output-text">Normalized Text</Label>
+                <Label htmlFor="output-text">Нормалізований текст</Label>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {outputText.length} chars
+                  {outputText.length} симв.
                 </span>
               </div>
               <Textarea
                 id="output-text"
-                placeholder="Normalized text will appear here..."
+                placeholder="Нормалізований текст з'явиться тут..."
                 value={outputText}
                 readOnly
                 className="min-h-75 resize-none bg-muted/50 text-muted-foreground"
@@ -94,7 +94,7 @@ export default function TextNormalizerPage() {
               className="px-6"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Clear
+              Очистити
             </Button>
             <Button
               onClick={handleCopy}
@@ -104,12 +104,12 @@ export default function TextNormalizerPage() {
               {copied ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Copied!
+                  Скопійовано!
                 </>
               ) : (
                 <>
                   <Copy className="mr-2 h-4 w-4" />
-                  Copy Normalized
+                  Скопіювати
                 </>
               )}
             </Button>

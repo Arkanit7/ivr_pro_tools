@@ -21,14 +21,13 @@ export default function TextNormalizationSelect({
               className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
               htmlFor="applyTextNormalization"
             >
-              Text Normalization
+              Нормалізація тексту
             </Label>
           </TooltipTrigger>
           <TooltipContent>
             <p>
-              Controls whether the ElevenLabs client applies text normalization.
-              Use "auto" for automatic behavior, "on" to force normalization, or
-              "off" to disable it.
+              Визначає, чи застосовує ElevenLabs нормалізацію тексту.
+              «auto» — автоматично, «on» — завжди, «off» — ніколи.
             </p>
           </TooltipContent>
         </Tooltip>
@@ -44,7 +43,7 @@ export default function TextNormalizationSelect({
           id="applyTextNormalization"
           aria-label="Text normalization"
         >
-          <SelectValue placeholder="Select mode" />
+          <SelectValue placeholder="Оберіть режим" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="on">on</SelectItem>

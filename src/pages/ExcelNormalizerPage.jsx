@@ -54,11 +54,11 @@ export default function ExcelNormalizer() {
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
             <FileSpreadsheet className="h-8 w-8 text-green-500" />
-            Excel Normalizer
+            Нормалізатор Excel
           </CardTitle>
           <CardDescription>
-            Normalizes the 2nd column of your Excel file for TTS and downloads
-            it instantly
+            Нормалізує другий стовпець Excel-файлу для TTS та завантажує
+            результат автоматично
           </CardDescription>
         </CardHeader>
 
@@ -66,8 +66,8 @@ export default function ExcelNormalizer() {
           <FileUpload
             file={file}
             onFileChange={handleFileChange}
-            defaultText="Upload Excel File"
-            instructionText="Col A: Filename | Col B: Script Text (will be normalized)"
+            defaultText="Завантажте Excel файл"
+            instructionText="Стовп A: Назва файлу | Стовп B: Текст (буде нормалізовано)"
           />
         </CardContent>
       </Card>
