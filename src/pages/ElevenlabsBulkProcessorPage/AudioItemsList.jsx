@@ -3,16 +3,6 @@ import {Card} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
 import {Play, Pause, RotateCcw, Download, Loader2} from 'lucide-react'
 
-function groupByText(items) {
-  const map = new Map()
-  for (const item of items) {
-    const key = item.text
-    if (!map.has(key)) map.set(key, [])
-    map.get(key).push(item)
-  }
-  return [...map.values()]
-}
-
 function getGroupStatus(groupItems) {
   if (groupItems.some((i) => i.status === 'processing')) return 'processing'
   if (groupItems.some((i) => i.status === 'error')) return 'error'
@@ -22,6 +12,7 @@ function getGroupStatus(groupItems) {
 
 export default function AudioItemsList({
   items,
+  groups,
   activeAudioId,
   isPlaying,
   onPlay,
@@ -32,7 +23,9 @@ export default function AudioItemsList({
   onUpdateText,
 }) {
   const completedItems = items.filter((item) => item.status === 'complete')
-  const groups = groupByText(items)
+  const resolvedGroups = groups.map((ids) =>
+    ids.map((id) => items.find((i) => i.id === id)).filter(Boolean),
+  )
 
   return (
     <div className="space-y-4">
@@ -57,7 +50,7 @@ export default function AudioItemsList({
       )}
 
       <div className="space-y-2">
-        {groups.map((groupItems) => {
+        {resolvedGroups.map((groupItems) => {
           const status = getGroupStatus(groupItems)
           const isActive = groupItems.some((i) => i.id === activeAudioId)
           const playableItem = groupItems.find((i) => i.audioUrl)
