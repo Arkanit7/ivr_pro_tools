@@ -11,6 +11,13 @@ import {FileSpreadsheet} from 'lucide-react'
 import FileUpload from '@/components/FileUpload'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 
+const formatDate = () => {
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('uk-UA')
+  const timeStr = now.toLocaleTimeString('uk-UA')
+  return `${dateStr}_${timeStr.replace(/:/g, '.')}`
+}
+
 export default function ExcelNormalizer() {
   const [file, setFile] = useState(null)
 
@@ -36,7 +43,9 @@ export default function ExcelNormalizer() {
     const newWorksheet = XLSX.utils.json_to_sheet(modifiedData)
     const newWorkbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'ModifiedSheet')
-    XLSX.writeFile(newWorkbook, `normalized_${selectedFile.name}`)
+    const ext = selectedFile.name.match(/\.[^.]+$/)?.[0] ?? '.xlsx'
+    const baseName = selectedFile.name.replace(/\.[^.]+$/, '')
+    XLSX.writeFile(newWorkbook, `${baseName}_${formatDate()}${ext}`)
   }
 
   return (
