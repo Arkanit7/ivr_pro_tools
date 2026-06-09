@@ -1,4 +1,5 @@
 import {useState, useRef} from 'react'
+import {useLocalStorage} from '@/hooks/useLocalStorage'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
 import {saveAs} from 'file-saver'
@@ -39,11 +40,11 @@ export default function ElevenlabsBulkProcessor() {
   const [status, setStatus] = useState('idle')
   const [progress, setProgress] = useState({current: 0, total: 0})
   const [audioItems, setAudioItems] = useState([])
-  const [speed, setSpeed] = useState(1.0)
-  const [stability, setStability] = useState(0.75)
-  const [similarityBoost, setSimilarityBoost] = useState(1)
-  const [styleExaggeration, setStyleExaggeration] = useState(0)
-  const [applyTextNormalization, setApplyTextNormalization] = useState('on')
+  const [speed, setSpeed] = useLocalStorage('vs_speed', 1.0)
+  const [stability, setStability] = useLocalStorage('vs_stability', 0.75)
+  const [similarityBoost, setSimilarityBoost] = useLocalStorage('vs_similarityBoost', 1)
+  const [styleExaggeration, setStyleExaggeration] = useLocalStorage('vs_styleExaggeration', 0)
+  const [applyTextNormalization, setApplyTextNormalization] = useLocalStorage('vs_applyTextNormalization', 'on')
   const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false)
   const [activeAudioId, setActiveAudioId] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
