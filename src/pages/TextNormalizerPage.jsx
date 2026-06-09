@@ -65,7 +65,7 @@ export default function TextNormalizerPage() {
                 placeholder="Вставте вихідний текст тут..."
                 value={inputText}
                 onChange={handleInputChange}
-                className="min-h-75 resize-none"
+                className="min-h-75 resize-y"
               />
             </div>
 
@@ -81,7 +81,7 @@ export default function TextNormalizerPage() {
                 placeholder="Нормалізований текст з'явиться тут..."
                 value={outputText}
                 readOnly
-                className="min-h-75 resize-none bg-muted/50 text-muted-foreground"
+                className="min-h-75 resize-y bg-muted/50 text-muted-foreground"
               />
             </div>
           </div>

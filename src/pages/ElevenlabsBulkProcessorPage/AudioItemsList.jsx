@@ -31,9 +31,7 @@ export default function AudioItemsList({
     <div className="space-y-4">
       {items.length > 0 && (
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">
-            Аудіофайли ({items.length})
-          </h3>
+          <h3 className="text-lg font-semibold">Аудіофайли ({items.length})</h3>
           {completedItems.length > 0 && (
             <div className="flex gap-2">
               <Button onClick={onPlayAll} variant="outline">
@@ -73,7 +71,7 @@ export default function AudioItemsList({
                         onUpdateText(i.id, e.target.value),
                       )
                     }
-                    className="min-h-20 resize-none"
+                    className="min-h-30 resize-y"
                     placeholder="Введіть текст для TTS..."
                   />
                 </div>

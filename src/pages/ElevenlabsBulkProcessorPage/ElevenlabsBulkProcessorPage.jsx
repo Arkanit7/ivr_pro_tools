@@ -43,9 +43,18 @@ export default function ElevenlabsBulkProcessor() {
   const [audioItemGroups, setAudioItemGroups] = useState([])
   const [speed, setSpeed] = useLocalStorage('vs_speed', 1.0)
   const [stability, setStability] = useLocalStorage('vs_stability', 0.75)
-  const [similarityBoost, setSimilarityBoost] = useLocalStorage('vs_similarityBoost', 1)
-  const [styleExaggeration, setStyleExaggeration] = useLocalStorage('vs_styleExaggeration', 0)
-  const [applyTextNormalization, setApplyTextNormalization] = useLocalStorage('vs_applyTextNormalization', 'on')
+  const [similarityBoost, setSimilarityBoost] = useLocalStorage(
+    'vs_similarityBoost',
+    1,
+  )
+  const [styleExaggeration, setStyleExaggeration] = useLocalStorage(
+    'vs_styleExaggeration',
+    0,
+  )
+  const [applyTextNormalization, setApplyTextNormalization] = useLocalStorage(
+    'vs_applyTextNormalization',
+    'on',
+  )
   const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false)
   const [activeAudioId, setActiveAudioId] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -309,7 +318,7 @@ export default function ElevenlabsBulkProcessor() {
   return (
     <TooltipProvider>
       <div className="flex min-h-full items-center justify-center bg-background p-6 pb-28">
-        <Card className="w-full max-w-4xl border-none shadow-xl">
+        <Card className="w-full max-w-3xl border-none shadow-xl">
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
               <FileAudio className="h-8 w-8 text-purple-600" />
