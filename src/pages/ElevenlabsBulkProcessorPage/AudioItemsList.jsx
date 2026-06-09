@@ -85,7 +85,24 @@ export default function AudioItemsList({
                   />
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex w-15 shrink-0 flex-col items-center gap-2">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      status === 'pending'
+                        ? 'bg-muted text-muted-foreground'
+                        : status === 'processing'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                          : status === 'complete'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                            : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                    }`}
+                  >
+                    {status === 'pending' && 'Pending'}
+                    {status === 'processing' && 'Process'}
+                    {status === 'complete' && 'Ready'}
+                    {status === 'error' && 'Error'}
+                  </span>
+
                   {status === 'complete' && (
                     <>
                       <Button
@@ -93,9 +110,11 @@ export default function AudioItemsList({
                         variant="outline"
                         onClick={() => onPlay(playableItem.id)}
                       >
-                        {isPlaying && playableItem.id === activeAudioId
-                          ? <Pause className="h-4 w-4" />
-                          : <Play className="h-4 w-4" />}
+                        {isPlaying && playableItem.id === activeAudioId ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
                       </Button>
                       <Button
                         size="sm"
@@ -112,9 +131,7 @@ export default function AudioItemsList({
                   <Button
                     size="sm"
                     variant={status === 'processing' ? 'secondary' : 'outline'}
-                    onClick={() =>
-                      onRegenerate(groupItems.map((i) => i.id))
-                    }
+                    onClick={() => onRegenerate(groupItems.map((i) => i.id))}
                     disabled={status === 'processing'}
                   >
                     {status === 'processing' ? (
@@ -123,13 +140,6 @@ export default function AudioItemsList({
                       <RotateCcw className="h-4 w-4" />
                     )}
                   </Button>
-
-                  <div className="min-w-15 text-right text-xs text-muted-foreground">
-                    {status === 'pending' && 'Pending'}
-                    {status === 'processing' && 'Processing'}
-                    {status === 'complete' && 'Ready'}
-                    {status === 'error' && 'Error'}
-                  </div>
                 </div>
               </div>
             </Card>
