@@ -1,13 +1,8 @@
 import {useState} from 'react'
 import * as XLSX from 'xlsx'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+import {Card, CardContent, CardHeader, CardTitle, CardDescription} from '@/components/ui/card'
 import {FileSpreadsheet} from 'lucide-react'
+import {PageShell} from '@/components/PageShell'
 import FileUpload from '@/components/FileUpload'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 
@@ -18,7 +13,7 @@ const formatDate = () => {
   return `${dateStr}_${timeStr.replace(/:/g, '.')}`
 }
 
-export default function ExcelNormalizer() {
+export default function ExcelNormalizerPage() {
   const [file, setFile] = useState(null)
 
   const handleFileChange = async (e) => {
@@ -49,16 +44,15 @@ export default function ExcelNormalizer() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-background p-6">
+    <PageShell>
       <Card className="w-full max-w-md border-none shadow-xl">
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
-            <FileSpreadsheet className="h-8 w-8 text-green-500" />
+            <FileSpreadsheet className="h-8 w-8 text-primary" />
             Нормалізатор Excel
           </CardTitle>
           <CardDescription>
-            Нормалізує другий стовпець Excel-файлу для TTS та завантажує
-            результат автоматично
+            Нормалізує другий стовпець Excel-файлу для TTS та завантажує результат автоматично
           </CardDescription>
         </CardHeader>
 
@@ -71,6 +65,6 @@ export default function ExcelNormalizer() {
           />
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   )
 }

@@ -1,28 +1,10 @@
 import {useState} from 'react'
 import {buttonVariants} from '@/components/ui/button'
 import {Link, NavLink} from 'react-router'
-import {FileSpreadsheet, FileAudio, FileText, Settings} from 'lucide-react'
+import {Settings} from 'lucide-react'
 import {cn} from '@/lib/utils'
-import {navigationRoutes} from '@/router/navigation'
+import {navigationRoutes, navItems} from '@/router/navigation'
 import SettingsModal from '@/components/SettingsModal'
-
-const navItems = [
-  {
-    to: navigationRoutes.textNormalizer,
-    icon: FileText,
-    label: 'Нормалізатор тексту',
-  },
-  {
-    to: navigationRoutes.excelNormalizer,
-    icon: FileSpreadsheet,
-    label: 'Нормалізатор Excel',
-  },
-  {
-    to: navigationRoutes.elevenlabsBulkProcessor,
-    icon: FileAudio,
-    label: 'Excel у голос',
-  },
-]
 
 function Sidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -34,8 +16,10 @@ function Sidebar() {
           to={navigationRoutes.home}
           className="pl-2.5 text-lg font-semibold text-foreground"
         >
-          IVR Pro Tools <span className="text-xs text-muted-foreground">v3</span>
+          IVR Pro Tools{' '}
+          <span className="text-xs text-muted-foreground">v3.1</span>
         </Link>
+
         <nav>
           <ul className="space-y-0.5">
             {navItems.map(({to, icon: Icon, label}) => (
@@ -46,7 +30,6 @@ function Sidebar() {
                     cn(
                       buttonVariants({
                         variant: isActive ? 'secondary' : 'ghost',
-                        size: 'default',
                       }),
                       'w-full justify-start',
                     )
@@ -63,7 +46,7 @@ function Sidebar() {
         <button
           onClick={() => setSettingsOpen(true)}
           className={cn(
-            buttonVariants({variant: 'ghost', size: 'default'}),
+            buttonVariants({variant: 'ghost'}),
             'mt-auto w-full justify-start',
           )}
         >

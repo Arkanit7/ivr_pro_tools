@@ -1,15 +1,21 @@
+import {FileText, FileSpreadsheet, FileAudio} from 'lucide-react'
+
 export const ROUTES = {
   HOME: '',
   TEXT_NORMALIZER: 'text-normalizer',
   EXCEL_NORMALIZER: 'excel-normalizer',
   ELEVENLABS_BULK_PROCESSOR: 'excel-to-voice',
-  TYPOGRAPHY: 'typography',
 }
 
 export const navigationRoutes = {
-  home: `/${ROUTES.HOME}`,
+  home: '/',
   textNormalizer: `/${ROUTES.TEXT_NORMALIZER}`,
   excelNormalizer: `/${ROUTES.EXCEL_NORMALIZER}`,
   elevenlabsBulkProcessor: `/${ROUTES.ELEVENLABS_BULK_PROCESSOR}`,
-  typography: `/${ROUTES.TYPOGRAPHY}`,
 }
+
+export const navItems = [
+  {to: navigationRoutes.textNormalizer, icon: FileText, label: 'Нормалізатор тексту'},
+  {to: navigationRoutes.excelNormalizer, icon: FileSpreadsheet, label: 'Нормалізатор Excel'},
+  {to: navigationRoutes.elevenlabsBulkProcessor, icon: FileAudio, label: 'Excel у голос'},
+]
