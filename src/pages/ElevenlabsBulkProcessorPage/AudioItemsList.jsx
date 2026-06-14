@@ -2,6 +2,14 @@ import {Button} from '@/components/ui/button'
 import {Card} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
 import {Play, Pause, RotateCcw, Download, Loader2} from 'lucide-react'
+import {cn} from '@/lib/utils'
+
+const STATUS_CONFIG = {
+  pending:    {label: 'Очікує',  className: 'bg-muted text-muted-foreground'},
+  processing: {label: 'Обробка', className: 'bg-primary/15 text-primary'},
+  complete:   {label: 'Готово',  className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'},
+  error:      {label: 'Помилка', className: 'bg-destructive/15 text-destructive'},
+}
 
 function getGroupStatus(groupItems) {
   if (groupItems.some((i) => i.status === 'processing')) return 'processing'
@@ -53,11 +61,12 @@ export default function AudioItemsList({
           const isActive = groupItems.some((i) => i.id === activeAudioId)
           const playableItem = groupItems.find((i) => i.audioUrl)
           const fileNames = groupItems.map((i) => i.fileName).join(', ')
+          const {label, className} = STATUS_CONFIG[status]
 
           return (
             <Card
               key={groupItems[0].id}
-              className={`p-4 transition-colors ${isActive ? 'ring-primary' : ''}`}
+              className={cn('p-4 transition-colors', isActive && 'ring-1 ring-primary')}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -67,9 +76,7 @@ export default function AudioItemsList({
                   <Textarea
                     value={groupItems[0].text}
                     onChange={(e) =>
-                      groupItems.forEach((i) =>
-                        onUpdateText(i.id, e.target.value),
-                      )
+                      groupItems.forEach((i) => onUpdateText(i.id, e.target.value))
                     }
                     className="min-h-30 resize-y"
                     placeholder="Введіть текст для TTS..."
@@ -77,21 +84,8 @@ export default function AudioItemsList({
                 </div>
 
                 <div className="flex w-15 shrink-0 flex-col items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      status === 'pending'
-                        ? 'bg-muted text-muted-foreground'
-                        : status === 'processing'
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-                          : status === 'complete'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-                    }`}
-                  >
-                    {status === 'pending' && 'Очікує'}
-                    {status === 'processing' && 'Обробка'}
-                    {status === 'complete' && 'Готово'}
-                    {status === 'error' && 'Помилка'}
+                  <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', className)}>
+                    {label}
                   </span>
 
                   {status === 'complete' && (
@@ -110,9 +104,7 @@ export default function AudioItemsList({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          onDownloadGroup(groupItems.map((i) => i.id))
-                        }
+                        onClick={() => onDownloadGroup(groupItems.map((i) => i.id))}
                       >
                         <Download className="h-4 w-4" />
                       </Button>

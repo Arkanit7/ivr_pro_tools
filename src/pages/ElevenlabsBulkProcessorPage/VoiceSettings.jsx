@@ -2,6 +2,84 @@ import {Slider} from '@/components/ui/slider'
 import {Label} from '@/components/ui/label'
 import {Tooltip, TooltipContent, TooltipTrigger} from '@/components/ui/tooltip'
 
+function SliderField({id, label, tooltip, value, displayValue, onValueChange, min, max, step}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+      <div className="flex items-center justify-between gap-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Label
+              htmlFor={id}
+              className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2"
+            >
+              {label}
+            </Label>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+        <span className="tabular-nums text-sm text-muted-foreground">{displayValue}</span>
+      </div>
+      <Slider
+        id={id}
+        value={[value]}
+        onValueChange={([v]) => onValueChange(v)}
+        min={min}
+        max={max}
+        step={step}
+      />
+    </div>
+  )
+}
+
+const SLIDERS = [
+  {
+    id: 'speed',
+    label: 'Швидкість',
+    tooltip:
+      'Контролює швидкість мовлення. Значення нижче 1.0 сповільнюють, вище 1.0 — прискорюють. Екстремальні значення можуть знизити якість генерації.',
+    min: 0.7,
+    max: 1.2,
+    step: 0.01,
+    key: 'speed',
+    format: (v) => v.toFixed(2),
+  },
+  {
+    id: 'stability',
+    label: 'Стабільність',
+    tooltip:
+      'Вища стабільність робить голос консистентнішим між генераціями, але може звучати монотонно. Для довгих текстів рекомендуємо знижувати це значення.',
+    min: 0,
+    max: 1,
+    step: 0.01,
+    key: 'stability',
+    format: (v) => `${(v * 100).toFixed()}%`,
+  },
+  {
+    id: 'similarityBoost',
+    label: 'Схожість',
+    tooltip:
+      'Висока схожість покращує чіткість голосу та відповідність оригіналу. Дуже високі значення можуть спричинити артефакти.',
+    min: 0,
+    max: 1,
+    step: 0.01,
+    key: 'similarityBoost',
+    format: (v) => `${(v * 100).toFixed()}%`,
+  },
+  {
+    id: 'styleExaggeration',
+    label: 'Стиль',
+    tooltip:
+      'Високі значення підкреслюють стиль мовлення. Можуть спричинити нестабільність генерації. Значення 0.0 — стандартне та значно прискорює генерацію.',
+    min: 0,
+    max: 1,
+    step: 0.01,
+    key: 'styleExaggeration',
+    format: (v) => `${(v * 100).toFixed()}%`,
+  },
+]
+
 export default function VoiceSettings({
   speed,
   setSpeed,
@@ -12,138 +90,30 @@ export default function VoiceSettings({
   styleExaggeration,
   setStyleExaggeration,
 }) {
+  const values = {speed, stability, similarityBoost, styleExaggeration}
+  const setters = {
+    speed: setSpeed,
+    stability: setStability,
+    similarityBoost: setSimilarityBoost,
+    styleExaggeration: setStyleExaggeration,
+  }
+
   return (
     <div className="space-y-2">
-      <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Label
-                className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
-                htmlFor="speed"
-              >
-                Швидкість
-              </Label>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Контролює швидкість мовлення. Значення нижче 1.0 сповільнюють,
-                вище 1.0 — прискорюють. Екстремальні значення можуть знизити
-                якість генерації.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          <span className="text-sm text-muted-foreground">
-            {speed.toFixed(2)}
-          </span>
-        </div>
-        <Slider
-          id="speed"
-          value={[speed]}
-          onValueChange={(value) => setSpeed(value[0])}
-          min={0.7}
-          max={1.2}
-          step={0.01}
+      {SLIDERS.map(({id, label, tooltip, min, max, step, key, format}) => (
+        <SliderField
+          key={id}
+          id={id}
+          label={label}
+          tooltip={tooltip}
+          value={values[key]}
+          displayValue={format(values[key])}
+          onValueChange={setters[key]}
+          min={min}
+          max={max}
+          step={step}
         />
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Label
-                className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
-                htmlFor="stability"
-              >
-                Стабільність
-              </Label>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Вища стабільність робить голос консистентнішим між
-                генераціями, але може звучати монотонно. Для довгих текстів
-                рекомендуємо знижувати це значення.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          <span className="text-sm text-muted-foreground">
-            {(stability * 100).toFixed()}%
-          </span>
-        </div>
-        <Slider
-          id="stability"
-          value={[stability]}
-          onValueChange={(value) => setStability(value[0])}
-          min={0}
-          max={1}
-          step={0.01}
-        />
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Label
-                className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
-                htmlFor="similarityBoost"
-              >
-                Схожість
-              </Label>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Висока схожість покращує чіткість голосу та відповідність
-                оригіналу. Дуже високі значення можуть спричинити артефакти.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          <span className="text-sm text-muted-foreground">
-            {(similarityBoost * 100).toFixed()}%
-          </span>
-        </div>
-        <Slider
-          id="similarityBoost"
-          value={[similarityBoost]}
-          onValueChange={(value) => setSimilarityBoost(value[0])}
-          min={0}
-          max={1}
-          step={0.01}
-        />
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Label
-                className="underline decoration-muted-foreground decoration-dotted underline-offset-2"
-                htmlFor="styleExaggeration"
-              >
-                Стиль
-              </Label>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Високі значення підкреслюють стиль мовлення. Можуть спричинити
-                нестабільність генерації. Значення 0.0 — стандартне та значно
-                прискорює генерацію.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-          <span className="text-sm text-muted-foreground">
-            {(styleExaggeration * 100).toFixed()}%
-          </span>
-        </div>
-        <Slider
-          id="styleExaggeration"
-          value={[styleExaggeration]}
-          onValueChange={(value) => setStyleExaggeration(value[0])}
-          min={0}
-          max={1}
-          step={0.01}
-        />
-      </div>
+      ))}
     </div>
   )
 }

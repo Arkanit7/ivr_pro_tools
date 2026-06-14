@@ -5,18 +5,11 @@ import JSZip from 'jszip'
 import {saveAs} from 'file-saver'
 import {FileAudio, ChevronDown} from 'lucide-react'
 import {ElevenLabsClient} from '@elevenlabs/elevenlabs-js/wrapper'
-
-// Shadcn UI Components
 import {Button} from '@/components/ui/button'
 import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {TooltipProvider} from '@/components/ui/tooltip'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-
-// Custom Components
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '@/components/ui/collapsible'
+import {PageShell} from '@/components/PageShell'
 import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
 import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNormalizationSelect'
 import FileUpload from '@/components/FileUpload'
@@ -28,14 +21,14 @@ const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
 const createElevenLabsClient = () => new ElevenLabsClient({apiKey: API_KEY})
 
-const formatDateForUkraine = () => {
+const formatDate = () => {
   const now = new Date()
-  const dateStr = now.toLocaleDateString('uk-UA') // dd.mm.yyyy
-  const timeStr = now.toLocaleTimeString('uk-UA') // hh:mm:ss
-  return `${dateStr}_${timeStr.replace(/:/g, '.')}` // dd.mm.yyyy_hh.mm.ss
+  const dateStr = now.toLocaleDateString('uk-UA')
+  const timeStr = now.toLocaleTimeString('uk-UA')
+  return `${dateStr}_${timeStr.replace(/:/g, '.')}`
 }
 
-export default function ElevenlabsBulkProcessor() {
+export default function ElevenlabsBulkProcessorPage() {
   const [file, setFile] = useState(null)
   const [status, setStatus] = useState('idle')
   const [progress, setProgress] = useState({current: 0, total: 0})
@@ -43,14 +36,8 @@ export default function ElevenlabsBulkProcessor() {
   const [audioItemGroups, setAudioItemGroups] = useState([])
   const [speed, setSpeed] = useLocalStorage('vs_speed', 1.0)
   const [stability, setStability] = useLocalStorage('vs_stability', 0.75)
-  const [similarityBoost, setSimilarityBoost] = useLocalStorage(
-    'vs_similarityBoost',
-    1,
-  )
-  const [styleExaggeration, setStyleExaggeration] = useLocalStorage(
-    'vs_styleExaggeration',
-    0,
-  )
+  const [similarityBoost, setSimilarityBoost] = useLocalStorage('vs_similarityBoost', 1)
+  const [styleExaggeration, setStyleExaggeration] = useLocalStorage('vs_styleExaggeration', 0)
   const [applyTextNormalization, setApplyTextNormalization] = useLocalStorage(
     'vs_applyTextNormalization',
     'on',
@@ -76,12 +63,9 @@ export default function ElevenlabsBulkProcessor() {
       const workbook = XLSX.read(buffer)
       const worksheet = workbook.Sheets[workbook.SheetNames[0]]
       const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1})
-      const allRows = rawData.slice(1) // Skip header row
-
-      const rows = allRows.filter((row) => {
-        const [, text] = row
-        return text && text.toString().trim() !== ''
-      })
+      const rows = rawData
+        .slice(1)
+        .filter(([, text]) => text && text.toString().trim() !== '')
 
       const items = rows.map(([fileName, text], index) => ({
         id: index,
@@ -112,6 +96,25 @@ export default function ElevenlabsBulkProcessor() {
     setSimilarityBoost(1)
     setStyleExaggeration(0)
     setApplyTextNormalization('on')
+  }
+
+  const generateSpeech = async (text) => {
+    const client = createElevenLabsClient()
+    const stream = await client.textToSpeech.convert(VOICE_ID, {
+      text,
+      modelId: 'eleven_multilingual_v2',
+      outputFormat: 'wav_32000',
+      languageCode: 'uk',
+      applyTextNormalization,
+      voiceSettings: {
+        speed,
+        stability,
+        similarityBoost,
+        useSpeakerBoost: true,
+        style: styleExaggeration,
+      },
+    })
+    return new Response(stream).blob()
   }
 
   const generateGroupAudio = async (itemIds) => {
@@ -149,22 +152,16 @@ export default function ElevenlabsBulkProcessor() {
     )
     if (groupItems.length === 0) return
 
+    const toFileName = (item) =>
+      item.fileName.toLowerCase().endsWith('.wav') ? item.fileName : `${item.fileName}.wav`
+
     if (groupItems.length === 1) {
-      const item = groupItems[0]
-      const fileName = item.fileName.toLowerCase().endsWith('.wav')
-        ? item.fileName
-        : `${item.fileName}.wav`
-      saveAs(item.audioBlob, fileName)
+      saveAs(groupItems[0].audioBlob, toFileName(groupItems[0]))
       return
     }
 
     const zip = new JSZip()
-    groupItems.forEach((item) => {
-      const fileName = item.fileName.toLowerCase().endsWith('.wav')
-        ? item.fileName
-        : `${item.fileName}.wav`
-      zip.file(fileName, item.audioBlob)
-    })
+    groupItems.forEach((item) => zip.file(toFileName(item), item.audioBlob))
     const blob = await zip.generateAsync({type: 'blob'})
     saveAs(blob, `${groupItems[0].fileName}_group.zip`)
   }
@@ -186,14 +183,15 @@ export default function ElevenlabsBulkProcessor() {
   }
 
   const onPlayAll = () => {
-    const queue = []
     const seen = new Set()
-    for (const item of audioItems) {
-      if (!seen.has(item.text) && item.audioUrl) {
+    const queue = audioItems
+      .filter((item) => {
+        if (seen.has(item.text) || !item.audioUrl) return false
         seen.add(item.text)
-        queue.push(item.id)
-      }
-    }
+        return true
+      })
+      .map((item) => item.id)
+
     playQueueRef.current = queue
     if (queue.length > 0) {
       setActiveAudioId(queue[0])
@@ -217,90 +215,39 @@ export default function ElevenlabsBulkProcessor() {
 
   const downloadAll = async () => {
     const zip = new JSZip()
-
     audioItems.forEach((item) => {
-      if (item.audioBlob) {
-        let fileName = item.fileName
-        if (!fileName.toLowerCase().endsWith('.wav')) {
-          fileName += '.wav'
-        }
-        zip.file(fileName, item.audioBlob)
-      }
+      if (!item.audioBlob) return
+      const fileName = item.fileName.toLowerCase().endsWith('.wav')
+        ? item.fileName
+        : `${item.fileName}.wav`
+      zip.file(fileName, item.audioBlob)
     })
-
     const baseName = file.name.replace(/\.[^.]+$/, '')
-    const finalZip = await zip.generateAsync({type: 'blob'})
-    saveAs(finalZip, `${baseName}_${formatDateForUkraine()}.zip`)
+    saveAs(await zip.generateAsync({type: 'blob'}), `${baseName}_${formatDate()}.zip`)
   }
 
   const updateItemText = (itemId, newText) => {
     setAudioItems((prev) =>
       prev.map((item) =>
         item.id === itemId
-          ? {
-              ...item,
-              text: newText,
-              status: 'pending',
-              audioBlob: null,
-              audioUrl: null,
-            }
+          ? {...item, text: newText, status: 'pending', audioBlob: null, audioUrl: null}
           : item,
       ),
     )
   }
 
-  const activeAudioItem = audioItems.find(
-    (item) => item.id === activeAudioId && item.audioUrl,
-  )
-
-  const generateSpeech = async (text) => {
-    try {
-      const client = createElevenLabsClient()
-      const stream = await client.textToSpeech.convert(VOICE_ID, {
-        text,
-        modelId: 'eleven_multilingual_v2',
-        outputFormat: 'wav_32000',
-        // outputFormat: 'alaw_8000',
-        languageCode: 'uk',
-        applyTextNormalization,
-        voiceSettings: {
-          speed,
-          stability,
-          similarityBoost,
-          useSpeakerBoost: true,
-          style: styleExaggeration,
-        },
-      })
-
-      return await new Response(stream).blob()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`ElevenLabs API error: ${message}`)
-    }
-  }
-
   const startBulkGeneration = async () => {
     if (!file) return alert('Будь ласка, завантажте Excel файл.')
+    if (!API_KEY || API_KEY === 'your-api-key-here')
+      return alert('Вкажіть API ключ ElevenLabs у файлі .env.')
+    if (!VOICE_ID) return alert('Вкажіть Voice ID ElevenLabs у файлі .env.')
 
-    // Validate API credentials
-    if (!API_KEY || API_KEY === 'your-api-key-here') {
-      alert('Вкажіть API ключ ElevenLabs у файлі .env.')
-      return
-    }
-
-    if (!VOICE_ID) {
-      alert('Вкажіть Voice ID ElevenLabs у файлі .env.')
-      return
-    }
-
-    const uniqueGroups = []
     const seen = new Set()
+    const uniqueGroups = []
     for (const item of audioItems) {
       if (!seen.has(item.text)) {
         seen.add(item.text)
-        uniqueGroups.push(
-          audioItems.filter((i) => i.text === item.text).map((i) => i.id),
-        )
+        uniqueGroups.push(audioItems.filter((i) => i.text === item.text).map((i) => i.id))
       }
     }
 
@@ -315,21 +262,23 @@ export default function ElevenlabsBulkProcessor() {
     setStatus('complete')
   }
 
+  const activeAudioItem = audioItems.find(
+    (item) => item.id === activeAudioId && item.audioUrl,
+  )
+
   return (
     <TooltipProvider>
-      <div className="flex min-h-full items-center justify-center bg-background p-6 pb-28">
+      <PageShell className="pb-28">
         <Card className="w-full max-w-3xl border-none shadow-xl">
           <CardHeader className="border-b pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
-              <FileAudio className="h-8 w-8 text-purple-600" />
+              <FileAudio className="h-8 w-8 text-primary" />
               Excel у голос
             </CardTitle>
           </CardHeader>
+
           <CardContent className="mt-2 space-y-4">
-            <Collapsible
-              open={isVoiceSettingsOpen}
-              onOpenChange={setIsVoiceSettingsOpen}
-            >
+            <Collapsible open={isVoiceSettingsOpen} onOpenChange={setIsVoiceSettingsOpen}>
               <CollapsibleTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
                   Налаштування голосу
@@ -347,17 +296,11 @@ export default function ElevenlabsBulkProcessor() {
                   styleExaggeration={styleExaggeration}
                   setStyleExaggeration={setStyleExaggeration}
                 />
-
                 <TextNormalizationSelect
                   applyTextNormalization={applyTextNormalization}
                   setApplyTextNormalization={setApplyTextNormalization}
                 />
-
-                <Button
-                  variant="ghost"
-                  onClick={resetToDefaults}
-                  className="w-full"
-                >
+                <Button variant="ghost" onClick={resetToDefaults} className="w-full">
                   Скинути до стандартних
                 </Button>
               </CollapsibleContent>
@@ -386,18 +329,14 @@ export default function ElevenlabsBulkProcessor() {
             />
           </CardContent>
         </Card>
-      </div>
+      </PageShell>
 
       {activeAudioItem && (
-        <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
           <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">
-                {activeAudioItem.fileName}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {activeAudioItem.text}
-              </p>
+              <p className="truncate text-sm font-semibold">{activeAudioItem.fileName}</p>
+              <p className="truncate text-xs text-muted-foreground">{activeAudioItem.text}</p>
             </div>
             <audio
               ref={audioRef}

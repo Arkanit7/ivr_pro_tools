@@ -2,6 +2,7 @@ import {useEffect} from 'react'
 import {Sun, Monitor, Moon, X} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import {useTheme} from '@/context/ThemeContext'
+import {Button} from '@/components/ui/button'
 
 const THEMES = [
   {value: 'light', icon: Sun, label: 'Світла'},
@@ -30,32 +31,28 @@ function SettingsModal({onClose}) {
       />
 
       <div className="relative z-10 w-80 animate-in fade-in zoom-in-95 duration-200">
-        <div className="rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <h2 className="text-base font-semibold text-card-foreground">Налаштування</h2>
-            <button
-              onClick={onClose}
-              className="flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label="Закрити"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Закрити">
+              <X />
+            </Button>
           </div>
 
-          <div className="px-5 py-4 space-y-4">
+          <div className="space-y-4 px-5 py-4">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Тема оформлення
               </p>
-              <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-muted">
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
                 {THEMES.map(({value, icon: Icon, label}) => (
                   <button
                     key={value}
                     onClick={() => setTheme(value)}
                     className={cn(
-                      'flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg text-xs font-medium transition-all duration-200 select-none',
+                      'flex flex-col items-center gap-1.5 select-none rounded-lg px-2 py-3 text-xs font-medium transition-all duration-200',
                       theme === value
-                        ? 'bg-background shadow-sm text-foreground'
+                        ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground',
                     )}
                   >
