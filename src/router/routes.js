@@ -5,6 +5,7 @@ import HomePage from '@/pages/HomePage/HomePage'
 import TextNormalizerPage from '@/pages/TextNormalizerPage'
 import ExcelNormalizerPage from '@/pages/ExcelNormalizerPage'
 import ElevenlabsBulkProcessorPage from '@/pages/ElevenlabsBulkProcessorPage/ElevenlabsBulkProcessorPage'
+import AudioEditorPage from '@/pages/AudioEditorPage/AudioEditorPage'
 
 /** @type {import('react-router').RouteObject[]} */
 export default [
@@ -30,6 +31,11 @@ export default [
         Component: ElevenlabsBulkProcessorPage,
         path: ROUTES.ELEVENLABS_BULK_PROCESSOR,
         handle: {title: 'Excel to Voice', icon: 'FileAudio'},
+      },
+      {
+        Component: AudioEditorPage,
+        path: ROUTES.AUDIO_EDITOR,
+        handle: {title: 'Аудіоредактор', icon: 'AudioWaveform'},
       },
       {Component: NotFoundPage, path: '*'},
     ],
