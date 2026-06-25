@@ -212,3 +212,37 @@ export function encodeWav(audioBuffer) {
 function w4cc(view, offset, str) {
   for (let i = 0; i < 4; i++) view.setUint8(offset + i, str.charCodeAt(i))
 }
+
+// ─── A-law encoder ────────────────────────────────────────────────────────────
+//
+// Inverse of the alawByteToLinear decoder in alawDecoder.js.
+// Segment boundaries are midpoints between consecutive decoded levels.
+//
+function linearToAlaw(v) {
+  v = Math.max(-32767, Math.min(32767, v))
+  const sign = v >= 0 ? 0x80 : 0
+  const abs = Math.abs(v)
+  let seg, mantissa
+  if (abs < 256)        { seg = 0; mantissa = Math.max(0, Math.round((abs - 8)     / 16))   & 0x0f }
+  else if (abs < 516)   { seg = 1; mantissa = Math.max(0, Math.round((abs - 264)   / 16))   & 0x0f }
+  else if (abs < 1032)  { seg = 2; mantissa = Math.max(0, Math.round((abs - 528)   / 32))   & 0x0f }
+  else if (abs < 2064)  { seg = 3; mantissa = Math.max(0, Math.round((abs - 1056)  / 64))   & 0x0f }
+  else if (abs < 4128)  { seg = 4; mantissa = Math.max(0, Math.round((abs - 2112)  / 128))  & 0x0f }
+  else if (abs < 8256)  { seg = 5; mantissa = Math.max(0, Math.round((abs - 4224)  / 256))  & 0x0f }
+  else if (abs < 16512) { seg = 6; mantissa = Math.max(0, Math.round((abs - 8448)  / 512))  & 0x0f }
+  else                  { seg = 7; mantissa = Math.min(15, Math.round((abs - 16896) / 1024)) & 0x0f }
+  return ((sign | (seg << 4) | mantissa) ^ 0x55) & 0xff
+}
+
+/**
+ * Encode a mono 8000 Hz AudioBuffer to a raw A-law (.alw) Blob.
+ * The caller is responsible for downmixing and resampling beforehand.
+ */
+export function encodeAlwBytes(mono8kBuffer) {
+  const data = mono8kBuffer.getChannelData(0)
+  const bytes = new Uint8Array(data.length)
+  for (let i = 0; i < data.length; i++) {
+    bytes[i] = linearToAlaw(Math.round(data[i] * 32767))
+  }
+  return new Blob([bytes], {type: 'application/octet-stream'})
+}
