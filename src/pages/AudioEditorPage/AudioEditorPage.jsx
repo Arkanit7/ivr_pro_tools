@@ -777,6 +777,39 @@ export default function AudioEditorPage() {
         if (isPlayingRef.current) handlerRefs.current.pausePlayback?.()
         else handlerRefs.current.startPlayback?.()
       }
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        const step = Math.round(0.01 * TARGET_SAMPLE_RATE) // 10 ms
+        const right = e.code === 'ArrowRight'
+        const sel = selectionRef.current
+        if (sel && sel.end > sel.start) {
+          // shift selection
+          e.preventDefault()
+          const clip = clipsRef.current.find(c => c.id === sel.clipId)
+          if (!clip) return
+          const selLen   = sel.end - sel.start
+          const newStart = right
+            ? Math.min(sel.start + step, clip.buffer.length - selLen)
+            : Math.max(sel.start - step, 0)
+          const newSel = {clipId: sel.clipId, start: newStart, end: newStart + selLen}
+          selectionRef.current = newSel
+          setSelection(newSel)
+        } else {
+          // shift cursor
+          const cur = cursorRef.current
+          if (!cur.clipId) return
+          e.preventDefault()
+          const clip = clipsRef.current.find(c => c.id === cur.clipId)
+          if (!clip) return
+          const newSample = right
+            ? Math.min(cur.sample + step, clip.buffer.length)
+            : Math.max(cur.sample - step, 0)
+          cursorRef.current = {clipId: cur.clipId, sample: newSample}
+          setCursorSample(newSample)
+        }
+      }
+      if (e.code === 'Escape') {
+        if (selectionRef.current) { selectionRef.current = null; setSelection(null) }
+      }
       if (e.ctrlKey || e.metaKey) {
         if (e.code === 'KeyX') { e.preventDefault(); handlerRefs.current.handleCut?.() }
         if (e.code === 'KeyC') { e.preventDefault(); handlerRefs.current.handleCopy?.() }
