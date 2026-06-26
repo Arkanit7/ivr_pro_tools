@@ -1,7 +1,8 @@
-import {useState, useRef, useEffect} from 'react'
+import {useState, useRef, useEffect, useMemo} from 'react'
 import {useLocalStorage} from '@/hooks/useLocalStorage'
-import {Mic2, Download} from 'lucide-react'
+import {Mic2} from 'lucide-react'
 import {cn} from '@/lib/utils'
+import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {decodeAlaw} from '@/pages/AudioEditorPage/alawDecoder'
 import {PageShell} from '@/components/PageShell'
 import {Button} from '@/components/ui/button'
@@ -103,11 +104,9 @@ export default function TTSPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
   const [rawBytes, setRawBytes] = useState(null)
-  const [playKey, setPlayKey] = useState(0)
   const [statusMsg, setStatusMsg] = useState('')
   const [isError, setIsError] = useState(false)
 
-  const audioRef = useRef(null)
   const audioUrlRef = useRef(null)
   const prevFormatRef = useRef(saveFormat)
 
@@ -210,7 +209,6 @@ export default function TTSPage() {
       }
 
       setAudioUrlClean(URL.createObjectURL(playbackBlob))
-      setPlayKey((k) => k + 1)
       setStatusMsg('Готово.')
       setIsError(false)
     } catch (err) {
@@ -221,20 +219,12 @@ export default function TTSPage() {
     }
   }
 
-  const handleSave = () => {
-    if (!rawBytes) return
-    const ext = saveFormat === 'alw' ? '.alw' : '.wav'
-    const name = (fileName.trim() || 'output') + ext
-    const blob = new Blob([rawBytes], {type: 'application/octet-stream'})
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = name
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   const fileNameInvalid = fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
+  const downloadName = (fileName.trim() || 'output') + (saveFormat === 'alw' ? '.alw' : '.wav')
+  const downloadBlob = useMemo(
+    () => (rawBytes ? new Blob([rawBytes], {type: 'application/octet-stream'}) : null),
+    [rawBytes],
+  )
 
   return (
     <TooltipProvider>
@@ -463,25 +453,17 @@ export default function TTSPage() {
 
       {audioUrl && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">
-                {(fileName.trim() || 'output') + (saveFormat === 'alw' ? '.alw' : '.wav')}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">{text.trim().slice(0, 100)}</p>
+          <div className="mx-auto flex max-w-5xl items-center gap-4">
+            <div className="min-w-0 shrink-0">
+              <p className="truncate text-sm font-semibold">{downloadName}</p>
+              <p className="max-w-xs truncate text-xs text-muted-foreground">{text.trim().slice(0, 80)}</p>
             </div>
-            <audio
-              ref={audioRef}
-              key={playKey}
-              controls
-              autoPlay
+            <AudioPlayer
               src={audioUrl}
-              className="w-full max-w-2xl"
+              downloadBlob={downloadBlob}
+              downloadName={downloadName}
+              className="flex-1"
             />
-            <Button variant="outline" size="sm" onClick={handleSave} className="shrink-0">
-              <Download className="mr-2 h-4 w-4" />
-              Зберегти
-            </Button>
           </div>
         </div>
       )}
