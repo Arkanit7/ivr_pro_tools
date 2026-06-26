@@ -15,6 +15,7 @@ import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNor
 import FileUpload from '@/components/FileUpload'
 import GenerateButton from '@/pages/ElevenlabsBulkProcessorPage/GenerateButton'
 import AudioItemsList from '@/pages/ElevenlabsBulkProcessorPage/AudioItemsList'
+import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
@@ -27,6 +28,9 @@ const formatDate = () => {
   const timeStr = now.toLocaleTimeString('uk-UA')
   return `${dateStr}_${timeStr.replace(/:/g, '.')}`
 }
+
+const toFileName = (item) =>
+  item.fileName.toLowerCase().endsWith('.wav') ? item.fileName : `${item.fileName}.wav`
 
 export default function ElevenlabsBulkProcessorPage() {
   const [file, setFile] = useState(null)
@@ -45,9 +49,8 @@ export default function ElevenlabsBulkProcessorPage() {
   const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false)
   const [activeAudioId, setActiveAudioId] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [playKey, setPlayKey] = useState(0)
   const playQueueRef = useRef([])
-  const audioRef = useRef(null)
+  const playerRef = useRef(null)
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0]
@@ -152,9 +155,6 @@ export default function ElevenlabsBulkProcessorPage() {
     )
     if (groupItems.length === 0) return
 
-    const toFileName = (item) =>
-      item.fileName.toLowerCase().endsWith('.wav') ? item.fileName : `${item.fileName}.wav`
-
     if (groupItems.length === 1) {
       saveAs(groupItems[0].audioBlob, toFileName(groupItems[0]))
       return
@@ -168,17 +168,11 @@ export default function ElevenlabsBulkProcessorPage() {
 
   const onPlay = (itemId) => {
     if (activeAudioId === itemId) {
-      if (isPlaying) {
-        audioRef.current?.pause()
-      } else if (audioRef.current?.ended) {
-        setPlayKey((k) => k + 1)
-      } else {
-        audioRef.current?.play()
-      }
+      if (isPlaying) playerRef.current?.pause()
+      else playerRef.current?.play()
     } else {
       playQueueRef.current = []
       setActiveAudioId(itemId)
-      setPlayKey((k) => k + 1)
     }
   }
 
@@ -193,20 +187,15 @@ export default function ElevenlabsBulkProcessorPage() {
       .map((item) => item.id)
 
     playQueueRef.current = queue
-    if (queue.length > 0) {
-      setActiveAudioId(queue[0])
-      setPlayKey((k) => k + 1)
-    }
+    if (queue.length > 0) setActiveAudioId(queue[0])
   }
 
   const handleAudioEnded = () => {
-    setIsPlaying(false)
     const queue = playQueueRef.current
     if (!queue.length) return
     const nextIndex = queue.indexOf(activeAudioId) + 1
     if (nextIndex < queue.length) {
       setActiveAudioId(queue[nextIndex])
-      setPlayKey((k) => k + 1)
     } else {
       playQueueRef.current = []
       setActiveAudioId(null)
@@ -217,10 +206,7 @@ export default function ElevenlabsBulkProcessorPage() {
     const zip = new JSZip()
     audioItems.forEach((item) => {
       if (!item.audioBlob) return
-      const fileName = item.fileName.toLowerCase().endsWith('.wav')
-        ? item.fileName
-        : `${item.fileName}.wav`
-      zip.file(fileName, item.audioBlob)
+      zip.file(toFileName(item), item.audioBlob)
     })
     const baseName = file.name.replace(/\.[^.]+$/, '')
     saveAs(await zip.generateAsync({type: 'blob'}), `${baseName}_${formatDate()}.zip`)
@@ -333,21 +319,20 @@ export default function ElevenlabsBulkProcessorPage() {
 
       {activeAudioItem && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
+          <div className="mx-auto flex max-w-4xl items-center gap-4">
+            <div className="min-w-0 shrink-0">
               <p className="truncate text-sm font-semibold">{activeAudioItem.fileName}</p>
-              <p className="truncate text-xs text-muted-foreground">{activeAudioItem.text}</p>
+              <p className="max-w-xs truncate text-xs text-muted-foreground">{activeAudioItem.text}</p>
             </div>
-            <audio
-              ref={audioRef}
-              key={playKey}
-              controls
-              autoPlay
+            <AudioPlayer
+              ref={playerRef}
               src={activeAudioItem.audioUrl}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
+              downloadBlob={activeAudioItem.audioBlob}
+              downloadName={toFileName(activeAudioItem)}
+              autoPlay
               onEnded={handleAudioEnded}
-              className="w-full max-w-2xl"
+              onPlayStateChange={setIsPlaying}
+              className="flex-1"
             />
           </div>
         </div>
