@@ -1,9 +1,10 @@
 import {useState, useRef, useEffect, useMemo} from 'react'
 import {useLocalStorage} from '@/hooks/useLocalStorage'
-import {Mic2} from 'lucide-react'
+import {Mic2, Wand2} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {decodeAlaw} from '@/pages/AudioEditorPage/alawDecoder'
+import normalizeForTTS from '@/lib/normalizeForTTS'
 import {PageShell} from '@/components/PageShell'
 import {Button} from '@/components/ui/button'
 import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
@@ -309,6 +310,21 @@ export default function TTSPage() {
                     className="resize-none"
                   />
                 </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    if (textBefore) setTextBefore(normalizeForTTS(textBefore))
+                    if (text) setText(normalizeForTTS(text))
+                    if (textAfter) setTextAfter(normalizeForTTS(textAfter))
+                  }}
+                >
+                  <Wand2 className="mr-2 h-3.5 w-3.5" />
+                  Нормалізувати текст
+                </Button>
 
                 <div className="space-y-1">
                   <Label>Зберегти як</Label>
