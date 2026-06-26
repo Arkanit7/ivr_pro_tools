@@ -138,10 +138,10 @@ function drawCanvas(canvas, clip, localCursor, localSel, localPlayhead, visSampl
   if (localSel && localSel.end > localSel.start) {
     const x0 = s2x(localSel.start)
     const x1 = s2x(localSel.end)
-    ctx.fillStyle = 'rgba(59,130,246,0.22)'
+    ctx.fillStyle = 'rgba(99,155,255,0.38)'
     ctx.fillRect(x0, 0, x1 - x0, H)
-    ctx.strokeStyle = 'rgba(59,130,246,0.7)'
-    ctx.lineWidth = 1
+    ctx.strokeStyle = '#93c5fd'
+    ctx.lineWidth = 2
     ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, H); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke()
   }
@@ -168,7 +168,7 @@ function drawCanvas(canvas, clip, localCursor, localSel, localPlayhead, visSampl
 // ─── ClipRow component ───────────────────────────────────────────────────────
 
 const ClipRow = memo(function ClipRow({
-  clip, index, totalClips, visSamples,
+  clip, index, totalClips, visSamples, isFocused,
   onRegister, onUnregister, onNeedRedraw,
   onMouseDown, onMouseMove, onMouseUp,
   onMoveUp, onMoveDown, onDelete, onRename,
@@ -220,7 +220,10 @@ const ClipRow = memo(function ClipRow({
   const getX = (e) => e.clientX - canvasRef.current.getBoundingClientRect().left
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border transition-colors duration-150">
+    <div className={cn(
+      'overflow-hidden rounded-lg border transition-colors duration-150',
+      isFocused ? 'border-primary ring-1 ring-primary' : 'border-border',
+    )}>
       <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-3 py-1.5">
         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{background: clip.color}} />
 
@@ -679,6 +682,38 @@ export default function AudioEditorPage() {
     }
   }, [])
 
+  const handleSaveClipWav = useCallback(() => {
+    const clip = clipsRef.current.find(c => c.id === cursorRef.current.clipId)
+    if (!clip) return
+    const blob = encodeWav(clip.buffer)
+    const url  = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = clip.name.replace(/\.[^.]+$/, '') + '.wav'; a.click()
+    URL.revokeObjectURL(url)
+    setStatus(`Збережено «${clip.name}» як .wav`)
+  }, [])
+
+  const handleSaveClipAlw = useCallback(async () => {
+    const clip = clipsRef.current.find(c => c.id === cursorRef.current.clipId)
+    if (!clip) return
+    setStatus('Кодування ALW…')
+    try {
+      const outLen = Math.ceil(clip.buffer.duration * 8000)
+      const offCtx = new OfflineAudioContext(1, outLen, 8000)
+      const src = offCtx.createBufferSource()
+      src.buffer = clip.buffer; src.connect(offCtx.destination); src.start(0)
+      const mono8k = await offCtx.startRendering()
+      const blob = encodeAlwBytes(mono8k)
+      const url  = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = clip.name.replace(/\.[^.]+$/, '') + '.alw'; a.click()
+      URL.revokeObjectURL(url)
+      setStatus(`Збережено «${clip.name}» як .alw @ 8 кГц моно`)
+    } catch (err) {
+      setStatus(`Помилка збереження: ${err.message}`)
+    }
+  }, [])
+
   const handleSelectAll = useCallback(() => {
     const clips = clipsRef.current
     if (!clips.length) return
@@ -866,16 +901,16 @@ export default function AudioEditorPage() {
 
             <div className="relative" ref={saveRef}>
               <Button variant="outline" size="sm"
-                onClick={() => setSaveOpen(v => !v)} disabled={!clips.length}>
-                <Download className="mr-1.5 h-3.5 w-3.5" />Зберегти як
+                onClick={() => setSaveOpen(v => !v)} disabled={!cursorClipId}>
+                <Download className="mr-1.5 h-3.5 w-3.5" />Зберегти обрану доріжку
                 <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
               {saveOpen && (
-                <div className="absolute top-full left-0 z-50 mt-1 min-w-[110px] rounded-md border border-border bg-popover py-1 shadow-md">
+                <div className="absolute top-full left-0 z-50 mt-1 min-w-32.5 rounded-md border border-border bg-popover py-1 shadow-md">
                   <button className="block w-full px-3 py-1.5 text-left text-xs hover:bg-accent"
-                    onClick={() => { handleExportWav(); setSaveOpen(false) }}>Експорт .wav</button>
+                    onClick={() => { handleSaveClipWav(); setSaveOpen(false) }}>Зберегти .wav</button>
                   <button className="block w-full px-3 py-1.5 text-left text-xs hover:bg-accent"
-                    onClick={() => { handleExportAlw(); setSaveOpen(false) }}>Експорт .alw</button>
+                    onClick={() => { handleSaveClipAlw(); setSaveOpen(false) }}>Зберегти .alw (8 кГц)</button>
                 </div>
               )}
             </div>
@@ -920,6 +955,7 @@ export default function AudioEditorPage() {
                       index={index}
                       totalClips={clips.length}
                       visSamples={visibleSamples}
+                      isFocused={clip.id === cursorClipId}
                       onRegister={onRegister}
                       onUnregister={onUnregister}
                       onNeedRedraw={drawAll}
