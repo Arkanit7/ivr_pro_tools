@@ -3,9 +3,11 @@ import {
   Upload, Scissors, Play, Pause, Square, Download,
   Undo2, Trash2, AudioWaveform, Clipboard,
   ClipboardPaste, ChevronUp, ChevronDown, ZoomIn, ZoomOut,
+  Volume2, VolumeX,
 } from 'lucide-react'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
+import {Slider} from '@/components/ui/slider'
 import {Label} from '@/components/ui/label'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
 import {cn} from '@/lib/utils'
@@ -332,6 +334,8 @@ export default function AudioEditorPage() {
   const [zoom, setZoom]                 = useState(1)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [saveOpen, setSaveOpen]         = useState(false)
+  const [volume, setVolume]             = useState(1)
+  const [muted, setMuted]               = useState(false)
 
   const clipsRef      = useRef([])
   const cursorRef     = useRef({clipId: null, sample: 0})
@@ -356,6 +360,9 @@ export default function AudioEditorPage() {
   const saveRef            = useRef(null)
   const visSamplesRef      = useRef(44100)  // updated every render; read by stable callbacks
   const containerWidthRef  = useRef(800)    // updated every render; read by RAF tick
+  const volumeRef          = useRef(1)      // updated every render; read by getGain
+  const mutedRef           = useRef(false)  // updated every render; read by getGain
+  const gainRef            = useRef(null)   // Web Audio GainNode, recreated if context resets
   const playOverlayRef     = useRef(null)   // amber line spanning all tracks
   const playTopTriRef      = useRef(null)   // ▼ triangle on top ruler
   const playBotTriRef      = useRef(null)   // ▲ triangle on bottom ruler
@@ -410,6 +417,8 @@ export default function AudioEditorPage() {
 
   visSamplesRef.current     = visibleSamples
   containerWidthRef.current = containerWidth
+  volumeRef.current         = volume
+  mutedRef.current          = muted
 
   // ── Audio context ──────────────────────────────────────────────────────────
 
@@ -417,6 +426,16 @@ export default function AudioEditorPage() {
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed')
       audioCtxRef.current = new AudioContext()
     return audioCtxRef.current
+  }
+
+  const getGain = () => {
+    const ctx = getCtx()
+    if (!gainRef.current || gainRef.current.context !== ctx) {
+      gainRef.current = ctx.createGain()
+      gainRef.current.gain.value = mutedRef.current ? 0 : volumeRef.current
+      gainRef.current.connect(ctx.destination)
+    }
+    return gainRef.current
   }
 
   // ── Canvas registration ────────────────────────────────────────────────────
@@ -568,6 +587,21 @@ export default function AudioEditorPage() {
   const handleZoomIn  = useCallback(() => setZoom(z => Math.min(z * 2, 32)), [])
   const handleZoomOut = useCallback(() => setZoom(z => Math.max(z / 2, 1)),  [])
 
+  const handleVolumeChange = useCallback(([v]) => {
+    const val = v / 100
+    setVolume(val)
+    setMuted(false)
+    if (gainRef.current) gainRef.current.gain.value = val
+  }, [])
+
+  const handleToggleMute = useCallback(() => {
+    setMuted(m => {
+      const next = !m
+      if (gainRef.current) gainRef.current.gain.value = next ? 0 : volumeRef.current
+      return next
+    })
+  }, [])
+
   // ── Playback ───────────────────────────────────────────────────────────────
 
   const cancelAnim = () => {
@@ -616,7 +650,7 @@ export default function AudioEditorPage() {
     const focusedClip = cur.clipId ? clips.find(c => c.id === cur.clipId) : null
     const remaining   = focusedClip ? Math.max(0, focusedClip.buffer.length - cur.sample) : null
     const src = audioCtx.createBufferSource()
-    src.buffer = merged; src.connect(audioCtx.destination)
+    src.buffer = merged; src.connect(getGain())
     if (remaining) src.start(0, start / TARGET_SAMPLE_RATE, remaining / TARGET_SAMPLE_RATE)
     else           src.start(0, start / TARGET_SAMPLE_RATE)
     src.onended = () => {
@@ -1037,6 +1071,29 @@ export default function AudioEditorPage() {
                 onClick={handleZoomIn} disabled={!clips.length || zoom >= 32} title="Збільшити масштаб">
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
+            </div>
+
+            <span className="h-5 w-px bg-border" />
+
+            <div className="flex items-center gap-2" title={`Гучність: ${Math.round(volume * 100)}%`}>
+              <button
+                onClick={handleToggleMute}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title={muted ? 'Увімкнути звук' : 'Вимкнути звук'}
+              >
+                {muted || volume === 0
+                  ? <VolumeX className="h-3.5 w-3.5" />
+                  : <Volume2 className="h-3.5 w-3.5" />}
+              </button>
+              <Slider
+                min={0} max={100} step={1}
+                value={[Math.round(volume * 100)]}
+                onValueChange={handleVolumeChange}
+                className="w-24"
+              />
+              <span className="w-8 text-xs text-muted-foreground" style={{fontFeatureSettings: '"tnum"'}}>
+                {Math.round(volume * 100)}%
+              </span>
             </div>
 
             <span className="h-5 w-px bg-border" />
