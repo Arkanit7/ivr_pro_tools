@@ -6,6 +6,7 @@ import TextNormalizerPage from '@/pages/TextNormalizerPage'
 import ExcelNormalizerPage from '@/pages/ExcelNormalizerPage'
 import ElevenlabsBulkProcessorPage from '@/pages/ElevenlabsBulkProcessorPage/ElevenlabsBulkProcessorPage'
 import AudioEditorPage from '@/pages/AudioEditorPage/AudioEditorPage'
+import TTSPage from '@/pages/TTS/TTSPage'
 
 /** @type {import('react-router').RouteObject[]} */
 export default [
@@ -36,6 +37,11 @@ export default [
         Component: AudioEditorPage,
         path: ROUTES.AUDIO_EDITOR,
         handle: {title: 'Аудіоредактор', icon: 'AudioWaveform'},
+      },
+      {
+        Component: TTSPage,
+        path: ROUTES.TTS,
+        handle: {title: 'Text to Speech', icon: 'Mic2'},
       },
       {Component: NotFoundPage, path: '*'},
     ],
