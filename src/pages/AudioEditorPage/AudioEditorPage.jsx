@@ -3,7 +3,7 @@ import {
   Upload, Scissors, Play, Pause, Square, Download,
   Undo2, Trash2, AudioWaveform, Clipboard,
   ClipboardPaste, ChevronUp, ChevronDown, ZoomIn, ZoomOut,
-  Volume2, VolumeX,
+  Volume2, VolumeX, Eraser,
 } from 'lucide-react'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
@@ -721,6 +721,24 @@ export default function AudioEditorPage() {
     setClips(prev => prev.map(c => c.id === clipId ? {...c, name: newName} : c))
   }, [])
 
+  const handleRemove = useCallback(() => {
+    const sel = selectionRef.current
+    if (!sel || sel.end <= sel.start) { setStatus('Спочатку виділіть ділянку.'); return }
+    const clip = clipsRef.current.find(c => c.id === sel.clipId)
+    if (!clip) return
+    const newBuffer = cutBuffer(clip.buffer, sel.start, sel.end)
+    pushUndo()
+    if (!newBuffer) {
+      setClips(prev => prev.filter(c => c.id !== clip.id))
+      setCursorClipId(null); setCursorSample(0)
+    } else {
+      setClips(prev => prev.map(c => c.id === clip.id ? {...c, buffer: newBuffer} : c))
+      setCursorClipId(clip.id); setCursorSample(sel.start)
+    }
+    setSelection(null)
+    setStatus(`Видалено ${fmt((sel.end - sel.start) / TARGET_SAMPLE_RATE)}.`)
+  }, [pushUndo])
+
   const handleCut = useCallback(() => {
     const sel = selectionRef.current
     if (!sel || sel.end <= sel.start) { setStatus('Спочатку виділіть ділянку.'); return }
@@ -1018,19 +1036,24 @@ export default function AudioEditorPage() {
 
             <span className="h-5 w-px bg-border" />
 
-            <Button variant="outline" size="sm"
+            <Button variant="outline" size="icon" className="h-8 w-8"
               onClick={() => isPlaying ? pausePlayback() : startPlayback()}
-              disabled={!clips.length}>
+              disabled={!clips.length}
+              title={isPlaying ? 'Пауза' : 'Відтворити'}>
               {isPlaying
-                ? <><Pause className="mr-1.5 h-3.5 w-3.5" />Пауза</>
-                : <><Play  className="mr-1.5 h-3.5 w-3.5" />Відтворити</>}
+                ? <Pause className="h-3.5 w-3.5" />
+                : <Play  className="h-3.5 w-3.5" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={stopAndReset} disabled={!isPlaying}>
-              <Square className="mr-1.5 h-3.5 w-3.5" />Стоп
+            <Button variant="outline" size="icon" className="h-8 w-8"
+              onClick={stopAndReset} disabled={!isPlaying} title="Стоп">
+              <Square className="h-3.5 w-3.5" />
             </Button>
 
             <span className="h-5 w-px bg-border" />
 
+            <Button variant="outline" size="sm" onClick={handleRemove} disabled={!hasSel} title="Видалити виділення">
+              <Eraser className="mr-1.5 h-3.5 w-3.5" />Видалити
+            </Button>
             <Button variant="outline" size="sm" onClick={handleCut}  disabled={!hasSel} title="Ctrl+X">
               <Scissors className="mr-1.5 h-3.5 w-3.5" />Вирізати
             </Button>
