@@ -454,14 +454,15 @@ export default function TTSPage() {
       {audioUrl && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
           <div className="mx-auto flex max-w-5xl items-center gap-4">
-            <div className="min-w-0 shrink-0">
+            <div className="w-52 shrink-0 overflow-hidden">
               <p className="truncate text-sm font-semibold">{downloadName}</p>
-              <p className="max-w-xs truncate text-xs text-muted-foreground">{text.trim().slice(0, 80)}</p>
+              <p className="truncate text-xs text-muted-foreground">{text.trim().slice(0, 80)}</p>
             </div>
             <AudioPlayer
               src={audioUrl}
               downloadBlob={downloadBlob}
               downloadName={downloadName}
+              autoPlay
               className="flex-1"
             />
           </div>
