@@ -1,4 +1,4 @@
-import {FileText, FileSpreadsheet, FileAudio, AudioWaveform} from 'lucide-react'
+import {FileText, FileSpreadsheet, FileAudio, AudioWaveform, Mic2} from 'lucide-react'
 
 export const ROUTES = {
   HOME: '',
@@ -6,6 +6,7 @@ export const ROUTES = {
   EXCEL_NORMALIZER: 'excel-normalizer',
   ELEVENLABS_BULK_PROCESSOR: 'excel-to-voice',
   AUDIO_EDITOR: 'audio-editor',
+  TTS: 'tts',
 }
 
 export const navigationRoutes = {
@@ -14,6 +15,7 @@ export const navigationRoutes = {
   excelNormalizer: `/${ROUTES.EXCEL_NORMALIZER}`,
   elevenlabsBulkProcessor: `/${ROUTES.ELEVENLABS_BULK_PROCESSOR}`,
   audioEditor: `/${ROUTES.AUDIO_EDITOR}`,
+  tts: `/${ROUTES.TTS}`,
 }
 
 export const navItems = [
@@ -21,4 +23,5 @@ export const navItems = [
   {to: navigationRoutes.excelNormalizer, icon: FileSpreadsheet, label: 'Нормалізатор Excel'},
   {to: navigationRoutes.elevenlabsBulkProcessor, icon: FileAudio, label: 'Excel у голос'},
   {to: navigationRoutes.audioEditor, icon: AudioWaveform, label: 'Аудіоредактор'},
+  {to: navigationRoutes.tts, icon: Mic2, label: 'Синтез мовлення'},
 ]
