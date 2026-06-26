@@ -71,27 +71,85 @@ function rulerInterval(pxPerSec) {
 
 // totalSecs: how many seconds are visible across the full canvas width
 // pxPerSec: pixels per second (for tick placement)
-function TimeRuler({totalSecs, pxPerSec}) {
+// variant: 'top' (ticks down, labels below) | 'bottom' (ticks up, labels above)
+// triangleRef: optional ref for a playhead indicator triangle (moved via DOM, no re-render)
+function TimeRuler({totalSecs, pxPerSec, variant = 'top', triangleRef}) {
   const interval = rulerInterval(pxPerSec)
-  const ticks = []
-  for (let t = 0; t <= totalSecs + 0.001; t = Math.round((t + interval) * 1000) / 1000) {
-    ticks.push(t)
-  }
+
+  // Sub-tick levels: [divisor, height_px]
+  // Each level renders only its ODD multiples (i += 2 starting at i=1),
+  // so it never overlaps with coarser levels.
+  // Sub-tick levels: [divisor, height_px, opacity]
+  const subLevels = [
+    [2,  11, 0.50],   // half
+    [4,   9, 0.35],   // quarter
+    [8,   7, 0.25],   // eighth
+    [16,  5, 0.18],   // sixteenth
+    [32,  4, 0.12],   // thirty-second
+  ]
+
+  const subTicks = []
+  subLevels.forEach(([div, h, op], li) => {
+    const step = interval / div
+    for (let i = 1; i * step <= totalSecs + 0.001; i += 2)
+      subTicks.push({px: Math.round(i * step * pxPerSec), h, op, key: `${li}-${i}`})
+  })
+
+  const majorTicks = []
+  for (let i = 0; i * interval <= totalSecs + 0.001; i++)
+    majorTicks.push(Math.round(i * interval * 1000) / 1000)
+
+  const isBottom = variant === 'bottom'
+  const edge = isBottom ? {bottom: 0} : {top: 0}
+
   return (
     <div
-      className="relative select-none border-b border-border bg-muted/20 overflow-hidden"
-      style={{height: 22}}
+      className={cn(
+        'relative select-none overflow-hidden bg-muted/20',
+        isBottom ? 'border-t border-border' : 'border-b border-border',
+      )}
+      style={{height: 32}}
     >
-      {ticks.map(t => (
+      {subTicks.map(({px, h, op, key}) => (
         <div
-          key={t}
-          className="absolute top-0 flex flex-col items-start"
-          style={{left: Math.round(t * pxPerSec)}}
-        >
-          <div className="h-2 w-px bg-border" />
-          <span className="ml-0.5 text-[9px] leading-none text-muted-foreground">{fmt(t)}</span>
-        </div>
+          key={key}
+          className="absolute w-px bg-muted-foreground"
+          style={{left: px, height: h, opacity: op, ...edge}}
+        />
       ))}
+      {majorTicks.map(t => {
+        const px = Math.round(t * pxPerSec)
+        return (
+          <div
+            key={t}
+            className="absolute flex"
+            style={{left: px, flexDirection: isBottom ? 'column-reverse' : 'column', ...edge}}
+          >
+            <div className="h-3.5 w-px bg-muted-foreground/70" />
+            <span
+              className="ml-1 text-[11px] leading-none text-muted-foreground"
+              style={{marginTop: isBottom ? undefined : 2, marginBottom: isBottom ? 2 : undefined}}
+            >
+              {fmt(t)}
+            </span>
+          </div>
+        )
+      })}
+      {/* Playhead triangle — positioned via DOM ref to avoid re-renders during playback */}
+      {triangleRef && (
+        <div
+          ref={triangleRef}
+          className="pointer-events-none absolute z-20 -translate-x-1/2"
+          style={{display: 'none', left: 0, ...edge}}
+        >
+          <div className={cn(
+            'h-0 w-0',
+            isBottom
+              ? 'border-x-[5px] border-b-[7px] border-x-transparent border-b-amber-400'
+              : 'border-x-[5px] border-t-[7px] border-x-transparent border-t-amber-400',
+          )} />
+        </div>
+      )}
     </div>
   )
 }
@@ -138,31 +196,14 @@ function drawCanvas(canvas, clip, localCursor, localSel, localPlayhead, visSampl
   if (localSel && localSel.end > localSel.start) {
     const x0 = s2x(localSel.start)
     const x1 = s2x(localSel.end)
-    ctx.fillStyle = 'rgba(99,155,255,0.38)'
+    ctx.fillStyle = 'rgba(96,165,250,0.45)'
     ctx.fillRect(x0, 0, x1 - x0, H)
-    ctx.strokeStyle = '#93c5fd'
-    ctx.lineWidth = 2
+    ctx.strokeStyle = '#3b82f6'
+    ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, H); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke()
   }
 
-  if (localCursor !== null) {
-    const cx = s2x(localCursor)
-    ctx.strokeStyle = 'rgba(255,255,255,0.65)'
-    ctx.lineWidth = 1.5
-    ctx.setLineDash([4, 3])
-    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke()
-    ctx.setLineDash([])
-  }
-
-  if (localPlayhead !== null) {
-    const px = s2x(localPlayhead)
-    if (px >= 0 && px <= W) {
-      ctx.strokeStyle = '#f59e0b'
-      ctx.lineWidth = 2
-      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke()
-    }
-  }
 }
 
 // ─── ClipRow component ───────────────────────────────────────────────────────
@@ -310,10 +351,17 @@ export default function AudioEditorPage() {
   const isDragRef     = useRef(false)
   const dragStartRef  = useRef(0)
   const dragClipRef   = useRef(null)
-  const handlerRefs   = useRef({})
-  const trackListRef  = useRef(null)
-  const saveRef       = useRef(null)
-  const visSamplesRef = useRef(44100)  // updated every render; read by stable callbacks
+  const handlerRefs        = useRef({})
+  const trackListRef       = useRef(null)
+  const saveRef            = useRef(null)
+  const visSamplesRef      = useRef(44100)  // updated every render; read by stable callbacks
+  const containerWidthRef  = useRef(800)    // updated every render; read by RAF tick
+  const playOverlayRef     = useRef(null)   // amber line spanning all tracks
+  const playTopTriRef      = useRef(null)   // ▼ triangle on top ruler
+  const playBotTriRef      = useRef(null)   // ▲ triangle on bottom ruler
+  const selStartOverlayRef = useRef(null)   // left edge of selection, spans rulers + tracks
+  const selEndOverlayRef   = useRef(null)   // right edge of selection, spans rulers + tracks
+  const cursorOverlayRef   = useRef(null)   // cursor position, spans rulers + tracks
 
   // Sync refs ← state
   useEffect(() => { clipsRef.current     = clips     }, [clips])
@@ -360,7 +408,8 @@ export default function AudioEditorPage() {
   // pxPerSec is purely for the TimeRuler tick positions — never used for canvas sizing.
   const pxPerSec = containerWidth / Math.max(maxDur / zoom, 0.001)
 
-  visSamplesRef.current = visibleSamples
+  visSamplesRef.current     = visibleSamples
+  containerWidthRef.current = containerWidth
 
   // ── Audio context ──────────────────────────────────────────────────────────
 
@@ -420,6 +469,34 @@ export default function AudioEditorPage() {
   }, [clips, cursorClipId, cursorSample, selection, isPlaying, drawAll])
 
   useEffect(() => { drawAll() }, [visibleSamples, drawAll])
+
+  // Keep cursor overlay in sync with cursor position + zoom + container width
+  useEffect(() => {
+    const el = cursorOverlayRef.current
+    if (!el) return
+    if (!cursorClipId) { el.style.display = 'none'; return }
+    const px = Math.round((cursorSample / visibleSamples) * containerWidth)
+    el.style.left    = px + 'px'
+    el.style.display = 'block'
+  }, [cursorClipId, cursorSample, visibleSamples, containerWidth])
+
+  // Keep selection edge overlays in sync with selection state + zoom + container width
+  useEffect(() => {
+    const startEl = selStartOverlayRef.current
+    const endEl   = selEndOverlayRef.current
+    if (!startEl || !endEl) return
+    if (!selection || selection.end <= selection.start) {
+      startEl.style.display = 'none'
+      endEl.style.display   = 'none'
+      return
+    }
+    const x0 = Math.round((selection.start / visibleSamples) * containerWidth)
+    const x1 = Math.round((selection.end   / visibleSamples) * containerWidth)
+    startEl.style.left    = x0 + 'px'
+    startEl.style.display = 'block'
+    endEl.style.left      = x1 + 'px'
+    endEl.style.display   = 'block'
+  }, [selection, visibleSamples, containerWidth])
 
   // ── Undo ───────────────────────────────────────────────────────────────────
 
@@ -497,10 +574,17 @@ export default function AudioEditorPage() {
     if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null }
   }
 
+  const hidePlayheadOverlay = () => {
+    if (playOverlayRef.current)  playOverlayRef.current.style.display = 'none'
+    if (playTopTriRef.current)   playTopTriRef.current.style.display  = 'none'
+    if (playBotTriRef.current)   playBotTriRef.current.style.display  = 'none'
+  }
+
   const pausePlayback = useCallback(() => {
     manualStopRef.current = true
     if (sourceRef.current) { try { sourceRef.current.stop() } catch {} sourceRef.current = null }
     cancelAnim()
+    hidePlayheadOverlay()
     const pos = playPos(clipsRef.current, playPosRef.current)
     setCursorClipId(pos.clipId); setCursorSample(pos.sample)
     cursorRef.current = {clipId: pos.clipId, sample: pos.sample}
@@ -511,6 +595,7 @@ export default function AudioEditorPage() {
     manualStopRef.current = true
     if (sourceRef.current) { try { sourceRef.current.stop() } catch {} sourceRef.current = null }
     cancelAnim()
+    hidePlayheadOverlay()
     playPosRef.current = 0
     const firstId = clipsRef.current[0]?.id ?? null
     setCursorClipId(firstId); setCursorSample(0)
@@ -527,15 +612,23 @@ export default function AudioEditorPage() {
     if (audioCtx.state === 'suspended') audioCtx.resume()
     const cur   = cursorRef.current
     const start = cur.clipId ? mergedOffset(clips, cur.clipId) + cur.sample : 0
+    // If a clip is focused, stop playback at the end of that clip (don't bleed into the next one)
+    const focusedClip = cur.clipId ? clips.find(c => c.id === cur.clipId) : null
+    const remaining   = focusedClip ? Math.max(0, focusedClip.buffer.length - cur.sample) : null
     const src = audioCtx.createBufferSource()
-    src.buffer = merged; src.connect(audioCtx.destination); src.start(0, start / TARGET_SAMPLE_RATE)
+    src.buffer = merged; src.connect(audioCtx.destination)
+    if (remaining) src.start(0, start / TARGET_SAMPLE_RATE, remaining / TARGET_SAMPLE_RATE)
+    else           src.start(0, start / TARGET_SAMPLE_RATE)
     src.onended = () => {
       if (manualStopRef.current) { manualStopRef.current = false; return }
       cancelAnim()
+      if (playOverlayRef.current)  playOverlayRef.current.style.display = 'none'
+      if (playTopTriRef.current)   playTopTriRef.current.style.display  = 'none'
+      if (playBotTriRef.current)   playBotTriRef.current.style.display  = 'none'
       playPosRef.current = 0
-      const firstId = clipsRef.current[0]?.id ?? null
-      setCursorClipId(firstId); setCursorSample(0)
-      cursorRef.current = {clipId: firstId, sample: 0}
+      const returnId = cur.clipId ?? clipsRef.current[0]?.id ?? null
+      setCursorClipId(returnId); setCursorSample(cur.sample)
+      cursorRef.current = {clipId: returnId, sample: cur.sample}
       setIsPlaying(false); sourceRef.current = null
       handlerRefs.current.drawAll?.()
     }
@@ -544,11 +637,27 @@ export default function AudioEditorPage() {
     playOffsetRef.current = start
     playPosRef.current   = start
     setIsPlaying(true)
+    if (playOverlayRef.current)  playOverlayRef.current.style.display = 'block'
+    if (playTopTriRef.current)   playTopTriRef.current.style.display  = 'block'
+    if (playBotTriRef.current)   playBotTriRef.current.style.display  = 'block'
     const tick = () => {
       const ctx = audioCtxRef.current
       if (!ctx) return
       playPosRef.current = playOffsetRef.current +
         Math.round((ctx.currentTime - playStartRef.current) * TARGET_SAMPLE_RATE)
+      // Compute local sample position within the currently-playing clip
+      const ph = playPosRef.current
+      const allClips = clipsRef.current
+      let off = 0, localPh = 0
+      for (const c of allClips) {
+        const local = ph - off
+        if (local <= c.buffer.length) { localPh = Math.max(0, local); break }
+        off += c.buffer.length
+      }
+      const px = Math.round((localPh / Math.max(1, visSamplesRef.current)) * containerWidthRef.current)
+      if (playOverlayRef.current)  playOverlayRef.current.style.left = px + 'px'
+      if (playTopTriRef.current)   playTopTriRef.current.style.left  = px + 'px'
+      if (playBotTriRef.current)   playBotTriRef.current.style.left  = px + 'px'
       handlerRefs.current.drawAll?.()
       animRef.current = requestAnimationFrame(tick)
     }
@@ -979,28 +1088,55 @@ export default function AudioEditorPage() {
               </div>
             ) : (
               <div className="rounded-md border border-border overflow-hidden">
-                <TimeRuler totalSecs={maxDur / zoom} pxPerSec={pxPerSec} />
-                <div className="flex flex-col gap-px overflow-y-auto" style={{maxHeight: '55vh'}}>
-                  {clips.map((clip, index) => (
-                    <ClipRow
-                      key={clip.id}
-                      clip={clip}
-                      index={index}
-                      totalClips={clips.length}
-                      visSamples={visibleSamples}
-                      isFocused={clip.id === cursorClipId}
-                      onRegister={onRegister}
-                      onUnregister={onUnregister}
-                      onNeedRedraw={drawAll}
-                      onMouseDown={onMouseDown}
-                      onMouseMove={onMouseMove}
-                      onMouseUp={onMouseUp}
-                      onMoveUp={() => handleMoveUp(index)}
-                      onMoveDown={() => handleMoveDown(index)}
-                      onDelete={() => handleDeleteClip(clip.id)}
-                      onRename={handleRename}
-                    />
-                  ))}
+                {/* Single relative wrapper so all overlays can span both rulers + all tracks */}
+                <div className="relative">
+                  <TimeRuler totalSecs={maxDur / zoom} pxPerSec={pxPerSec} triangleRef={playTopTriRef} />
+                  {/* Playhead — amber, spans rulers + tracks */}
+                  <div
+                    ref={playOverlayRef}
+                    className="pointer-events-none absolute inset-y-0 z-20 w-px bg-amber-400"
+                    style={{display: 'none', left: 0}}
+                  />
+                  {/* Cursor — bright white, spans rulers + tracks */}
+                  <div
+                    ref={cursorOverlayRef}
+                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-white"
+                    style={{display: 'none', left: 0}}
+                  />
+                  {/* Selection edge lines — blue 1px, span rulers + tracks */}
+                  <div
+                    ref={selStartOverlayRef}
+                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-blue-500"
+                    style={{display: 'none', left: 0}}
+                  />
+                  <div
+                    ref={selEndOverlayRef}
+                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-blue-500"
+                    style={{display: 'none', left: 0}}
+                  />
+                  <div className="flex flex-col gap-px overflow-y-auto" style={{maxHeight: '55vh'}}>
+                    {clips.map((clip, index) => (
+                      <ClipRow
+                        key={clip.id}
+                        clip={clip}
+                        index={index}
+                        totalClips={clips.length}
+                        visSamples={visibleSamples}
+                        isFocused={clip.id === cursorClipId}
+                        onRegister={onRegister}
+                        onUnregister={onUnregister}
+                        onNeedRedraw={drawAll}
+                        onMouseDown={onMouseDown}
+                        onMouseMove={onMouseMove}
+                        onMouseUp={onMouseUp}
+                        onMoveUp={() => handleMoveUp(index)}
+                        onMoveDown={() => handleMoveDown(index)}
+                        onDelete={() => handleDeleteClip(clip.id)}
+                        onRename={handleRename}
+                      />
+                    ))}
+                  </div>
+                  <TimeRuler totalSecs={maxDur / zoom} pxPerSec={pxPerSec} variant="bottom" triangleRef={playBotTriRef} />
                 </div>
               </div>
             )}
