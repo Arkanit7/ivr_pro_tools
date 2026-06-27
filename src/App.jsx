@@ -1,11 +1,14 @@
 import router from './router'
 import {RouterProvider} from 'react-router'
 import {ThemeProvider} from '@/context/ThemeContext'
+import {AccentProvider} from '@/context/AccentContext'
 
 function App() {
   return (
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <AccentProvider>
+        <RouterProvider router={router} />
+      </AccentProvider>
     </ThemeProvider>
   )
 }

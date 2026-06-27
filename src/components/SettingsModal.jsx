@@ -2,6 +2,7 @@ import {useEffect} from 'react'
 import {Sun, Monitor, Moon, X} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import {useTheme} from '@/context/ThemeContext'
+import {useAccent, ACCENT_COLORS} from '@/context/AccentContext'
 import {Button} from '@/components/ui/button'
 
 const THEMES = [
@@ -12,6 +13,7 @@ const THEMES = [
 
 function SettingsModal({onClose}) {
   const {theme, setTheme} = useTheme()
+  const {accent, setAccent, customColor, setCustomColor} = useAccent()
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -60,6 +62,50 @@ function SettingsModal({onClose}) {
                     {label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Акцентний колір
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {ACCENT_COLORS.map(({id, label, preview}) => (
+                  <button
+                    key={id}
+                    title={label}
+                    onClick={() => setAccent(id)}
+                    style={{backgroundColor: preview}}
+                    className={cn(
+                      'h-7 w-7 rounded-full transition-all',
+                      accent === id
+                        ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
+                        : 'hover:scale-110',
+                    )}
+                  />
+                ))}
+
+                {/* Native colour picker — styled as a swatch circle */}
+                <label
+                  title="Власний колір"
+                  style={{backgroundColor: customColor}}
+                  className={cn(
+                    'relative h-7 w-7 cursor-pointer overflow-hidden rounded-full transition-all',
+                    accent === 'custom'
+                      ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
+                      : 'hover:scale-110',
+                  )}
+                >
+                  <input
+                    type="color"
+                    value={customColor}
+                    onChange={(e) => {
+                      setCustomColor(e.target.value)
+                      setAccent('custom')
+                    }}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  />
+                </label>
               </div>
             </div>
           </div>

@@ -14,7 +14,7 @@ function Sidebar() {
     <>
       <div
         className={cn(
-          'sticky top-0 flex h-screen shrink-0 flex-col gap-4 overflow-hidden border-r border-border bg-background p-3 transition-[width] duration-300 ease-in-out',
+          'sticky top-0 z-51 flex h-screen shrink-0 flex-col gap-4 overflow-hidden border-r border-border bg-background p-3 transition-[width] duration-300 ease-in-out',
           collapsed ? 'w-16' : 'w-64',
         )}
       >
