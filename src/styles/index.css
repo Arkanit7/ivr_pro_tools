@@ -48,6 +48,12 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+.card-playing {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--primary) 60%, transparent),
+    0 0 18px color-mix(in oklch, var(--primary) 25%, transparent);
+}
+
 @keyframes gradient-shift {
   0% {
     background-position-x: 0%;

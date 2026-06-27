@@ -82,7 +82,7 @@ export default function AudioItemsList({
         </div>
       )}
 
-      <div className="divide-y divide-border">
+      <div className="space-y-3">
         {resolvedGroups.map((groupItems) => {
           const status = getGroupStatus(groupItems)
           const isActive = groupItems.some((i) => i.id === activeAudioId)
@@ -93,8 +93,8 @@ export default function AudioItemsList({
             <div
               key={groupItems[0].id}
               className={cn(
-                'py-2 transition-colors',
-                isActive && 'bg-primary/5',
+                'rounded-lg border bg-card p-3 shadow-sm transition-all',
+                isActive && isPlaying ? 'card-playing border-primary' : 'border-border',
               )}
             >
               <div className="flex items-start justify-between gap-3">
