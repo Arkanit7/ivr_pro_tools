@@ -44,28 +44,45 @@ function pcm16ToWavBlob(pcm, sampleRate) {
   const dataSize = pcm.length * 2
   const buf = new ArrayBuffer(44 + dataSize)
   const v = new DataView(buf)
-  const str = (off, s) => [...s].forEach((c, i) => v.setUint8(off + i, c.charCodeAt(0)))
-  str(0, 'RIFF'); v.setUint32(4, 36 + dataSize, true); str(8, 'WAVE')
-  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true)
-  v.setUint16(22, 1, true); v.setUint32(24, sampleRate, true)
-  v.setUint32(28, sampleRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true)
-  str(36, 'data'); v.setUint32(40, dataSize, true)
+  const str = (off, s) =>
+    [...s].forEach((c, i) => v.setUint8(off + i, c.charCodeAt(0)))
+  str(0, 'RIFF')
+  v.setUint32(4, 36 + dataSize, true)
+  str(8, 'WAVE')
+  str(12, 'fmt ')
+  v.setUint32(16, 16, true)
+  v.setUint16(20, 1, true)
+  v.setUint16(22, 1, true)
+  v.setUint32(24, sampleRate, true)
+  v.setUint32(28, sampleRate * 2, true)
+  v.setUint16(32, 2, true)
+  v.setUint16(34, 16, true)
+  str(36, 'data')
+  v.setUint32(40, dataSize, true)
   for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, pcm[i], true)
   return new Blob([buf], {type: 'audio/wav'})
 }
-
 
 export default function TTSPage() {
   const [textBefore, setTextBefore] = useLocalStorage('tts_textBefore', '')
   const [text, setText] = useLocalStorage('tts_text', '')
   const [textAfter, setTextAfter] = useLocalStorage('tts_textAfter', '')
   const [fileName, setFileName] = useLocalStorage('tts_fileName', 'output')
-  const [model, setModel] = useLocalStorage('tts_model', 'eleven_multilingual_v2')
+  const [model, setModel] = useLocalStorage(
+    'tts_model',
+    'eleven_multilingual_v2',
+  )
   const [stability, setStability] = useLocalStorage('tts_stability', 0.75)
-  const [similarityBoost, setSimilarityBoost] = useLocalStorage('tts_similarityBoost', 1.0)
+  const [similarityBoost, setSimilarityBoost] = useLocalStorage(
+    'tts_similarityBoost',
+    1.0,
+  )
   const [style, setStyle] = useLocalStorage('tts_style', 0)
   const [speed, setSpeed] = useLocalStorage('tts_speed', 1.0)
-  const [textNormalization, setTextNormalization] = useLocalStorage('tts_textNormalization', 'on')
+  const [textNormalization, setTextNormalization] = useLocalStorage(
+    'tts_textNormalization',
+    'on',
+  )
   const [saveFormat, setSaveFormat] = useLocalStorage('tts_saveFormat', 'alw')
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -195,13 +212,19 @@ export default function TTSPage() {
     setTextNormalization('on')
   }
 
-  const fileNameInvalid = fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
+  const fileNameInvalid =
+    fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
   const ext = saveFormat === 'alw' ? '.alw' : '.wav'
   const downloadName = (fileName.trim() || 'IVR_Pro_Tools') + ext
   const getDownloadName = () =>
-    (fileName.trim() || 'IVR_Pro_Tools_' + new Date().toISOString().slice(0, 19).replace(/:/g, '_')) + ext
+    (fileName.trim() ||
+      'IVR_Pro_Tools_' +
+        new Date().toISOString().slice(0, 19).replace(/:/g, '_')) + ext
   const downloadBlob = useMemo(
-    () => (rawBytes ? new Blob([rawBytes], {type: 'application/octet-stream'}) : null),
+    () =>
+      rawBytes
+        ? new Blob([rawBytes], {type: 'application/octet-stream'})
+        : null,
     [rawBytes],
   )
 
@@ -218,24 +241,26 @@ export default function TTSPage() {
   return (
     <TooltipProvider>
       {/* -my-8 cancels the py-8 from MainLayout's <main> so the sidebar can be sticky top-0 */}
-      <div className="flex -my-8 min-h-screen">
-
+      <div className="-my-8 flex min-h-screen">
         {/* ── Center content column ───────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex justify-center py-10 px-6 pb-28">
+        <div className="flex min-w-0 flex-1 justify-center px-6 py-10 pb-28">
           <div className="w-full max-w-2xl space-y-6">
-
             {/* Heading */}
             <div className="flex items-center gap-4 pb-2">
-              <Mic2 className="h-10 w-10 text-primary shrink-0" />
+              <Mic2 className="h-10 w-10 shrink-0 text-primary" />
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Синтез мовлення</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Генерація аудіо через ElevenLabs TTS</p>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Синтез мовлення
+                </h1>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Генерація аудіо через ElevenLabs TTS
+                </p>
               </div>
             </div>
 
             {/* File name */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Назва файлу
               </Label>
               <Input
@@ -244,20 +269,32 @@ export default function TTSPage() {
                 placeholder="output"
                 className={cn(
                   'h-11 text-base font-semibold',
-                  fileNameInvalid && 'border-destructive focus-visible:ring-destructive',
+                  fileNameInvalid &&
+                    'border-destructive focus-visible:ring-destructive',
                 )}
               />
               {fileNameInvalid && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-destructive">
-                    Тільки латинські символи, цифри, <code>_</code> та <code>-</code>. Недопустимі символи:
+                    Тільки латинські символи, цифри, <code>_</code> та{' '}
+                    <code>-</code>. Недопустимі символи:
                   </p>
                   <p className="font-mono text-sm leading-relaxed">
                     {[...fileName].map((char, i) => {
                       const bad = !VALID_FILENAME_CHAR.test(char)
-                      const display = char === ' ' ? '␣' : char === '\t' ? '⇥' : char === '\n' ? '↵' : char
+                      const display =
+                        char === ' '
+                          ? '␣'
+                          : char === '\t'
+                            ? '⇥'
+                            : char === '\n'
+                              ? '↵'
+                              : char
                       return bad ? (
-                        <mark key={i} className="rounded bg-destructive/20 px-0.5 text-destructive not-italic">
+                        <mark
+                          key={i}
+                          className="rounded bg-destructive/20 px-0.5 text-destructive not-italic"
+                        >
                           {display}
                         </mark>
                       ) : (
@@ -271,22 +308,24 @@ export default function TTSPage() {
 
             {/* Context before */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Контекст до{' '}
-                <span className="normal-case font-normal opacity-60">— не озвучується</span>
+                <span className="font-normal normal-case opacity-60">
+                  — не озвучується
+                </span>
               </Label>
               <Textarea
                 value={textBefore}
                 onChange={(e) => setTextBefore(e.target.value)}
                 placeholder="Текст перед основним (впливає на просодію)"
                 rows={2}
-                className="resize-y min-h-16"
+                className="min-h-16 resize-y"
               />
             </div>
 
             {/* Main text */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Текст для озвучення
               </Label>
               <Textarea
@@ -294,22 +333,24 @@ export default function TTSPage() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Введіть текст для синтезу…"
                 rows={12}
-                className="resize-y min-h-64"
+                className="min-h-64 resize-y"
               />
             </div>
 
             {/* Context after */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Контекст після{' '}
-                <span className="normal-case font-normal opacity-60">— не озвучується</span>
+                <span className="font-normal normal-case opacity-60">
+                  — не озвучується
+                </span>
               </Label>
               <Textarea
                 value={textAfter}
                 onChange={(e) => setTextAfter(e.target.value)}
                 placeholder="Текст після основного (впливає на просодію)"
                 rows={2}
-                className="resize-y min-h-16"
+                className="min-h-16 resize-y"
               />
             </div>
 
@@ -334,33 +375,44 @@ export default function TTSPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={isGenerating || fileNameInvalid}
-                  className="flex-1 h-12 text-base"
+                  className="h-12 flex-1 text-base"
                 >
                   {isGenerating ? 'Генерація…' : 'Генерувати'}
                 </Button>
-                <Button variant="outline" onClick={handleDownload} disabled={!downloadBlob} className="h-12 px-6">
+                <Button
+                  variant="outline"
+                  onClick={handleDownload}
+                  disabled={!downloadBlob}
+                  className="h-12 px-6"
+                >
                   Завантажити
                 </Button>
               </div>
 
               {statusMsg && (
-                <p className={cn('text-sm text-center', isError ? 'text-destructive' : 'text-muted-foreground')}>
+                <p
+                  className={cn(
+                    'text-center text-sm',
+                    isError ? 'text-destructive' : 'text-muted-foreground',
+                  )}
+                >
                   {statusMsg}
                 </p>
               )}
             </div>
-
           </div>
         </div>
 
         {/* ── Right settings sidebar ──────────────────────────────── */}
-        <aside className="scrollbar-thin sticky top-0 h-screen w-108 shrink-0 flex flex-col gap-4 overflow-y-auto border-l border-border bg-background p-3 pb-28">
-          <div className="pl-2 py-1">
-            <p className="text-lg font-semibold whitespace-nowrap">Налаштування</p>
+        <aside className="scrollbar-thin sticky top-0 flex h-screen w-80 shrink-0 scroll-pb-28 flex-col gap-1 overflow-y-auto border-l border-border bg-background p-3">
+          <div className="py-1 pl-2">
+            <p className="text-lg font-semibold whitespace-nowrap">
+              Налаштування
+            </p>
           </div>
 
           {/* Model */}
-          <div className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-3 p-1.5">
             <Label>Модель</Label>
             <Select value={model} onValueChange={setModel}>
               <SelectTrigger>
@@ -393,7 +445,7 @@ export default function TTSPage() {
           />
 
           {/* Save format */}
-          <div className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-3 p-1.5">
             <Label>Зберегти як</Label>
             <Select value={saveFormat} onValueChange={setSaveFormat}>
               <SelectTrigger>
@@ -420,7 +472,9 @@ export default function TTSPage() {
           <div className="mx-auto flex max-w-5xl items-center gap-4">
             <div className="w-52 shrink-0 overflow-hidden">
               <p className="truncate text-sm font-semibold">{downloadName}</p>
-              <p className="truncate text-xs text-muted-foreground">{text.trim().slice(0, 80)}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {text.trim().slice(0, 80)}
+              </p>
             </div>
             <AudioPlayer
               src={audioUrl}
