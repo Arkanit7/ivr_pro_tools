@@ -5,6 +5,7 @@ import {
   useCallback,
   forwardRef,
   useImperativeHandle,
+  memo,
 } from 'react'
 import {Play, Pause, Volume2, VolumeX, Download} from 'lucide-react'
 import {cn} from '@/lib/utils'
@@ -16,6 +17,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+const PLAYBACK_RATES = [0.75, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2]
+
+const SpeedSelect = memo(function SpeedSelect({value, onChange}) {
+  return (
+    <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
+      <SelectTrigger className="h-7 w-14 shrink-0 border border-border bg-transparent px-1 text-xs text-muted-foreground shadow-none">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {PLAYBACK_RATES.map((r) => (
+          <SelectItem key={r} value={String(r)}>
+            {r}×
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+})
 
 function fmt(s) {
   if (!isFinite(s) || s < 0) return '0:00'
@@ -204,11 +224,11 @@ const AudioPlayer = forwardRef(function AudioPlayer(
     setMuted(next)
   }
 
-  const handlePlaybackRate = (rate) => {
+  const handlePlaybackRate = useCallback((rate) => {
     playbackRateRef.current = rate
     setPlaybackRate(rate)
     if (audioRef.current) audioRef.current.playbackRate = rate
-  }
+  }, [])
 
   const handleDownload = () => {
     const name = getDownloadName ? getDownloadName() : downloadName
@@ -281,21 +301,7 @@ const AudioPlayer = forwardRef(function AudioPlayer(
       />
 
       {/* Playback speed */}
-      <Select
-        value={String(playbackRate)}
-        onValueChange={(v) => handlePlaybackRate(Number(v))}
-      >
-        <SelectTrigger className="h-7 w-14 shrink-0 border border-border bg-transparent px-1 text-xs text-muted-foreground shadow-none">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {[0.75, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2].map((r) => (
-            <SelectItem key={r} value={String(r)}>
-              {r}×
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <SpeedSelect value={playbackRate} onChange={handlePlaybackRate} />
 
       {/* Download */}
       {downloadBlob && (downloadName || getDownloadName) && (
