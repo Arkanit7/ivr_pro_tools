@@ -9,6 +9,7 @@ import {
 } from 'react'
 import {Play, Pause, Volume2, VolumeX, Download} from 'lucide-react'
 import {cn} from '@/lib/utils'
+import {useLocalStorage} from '@/hooks/useLocalStorage'
 import {saveAs} from 'file-saver'
 import {
   Select,
@@ -128,8 +129,8 @@ const AudioPlayer = forwardRef(function AudioPlayer(
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
   const [muted, setMuted] = useState(false)
-  const [playbackRate, setPlaybackRate] = useState(1)
-  const playbackRateRef = useRef(1)
+  const [playbackRate, setPlaybackRate] = useLocalStorage('audio_playback_rate', 1)
+  const playbackRateRef = useRef(playbackRate)
 
   // Expose imperative play/pause for parent pages that need per-item button control
   useImperativeHandle(ref, () => ({
