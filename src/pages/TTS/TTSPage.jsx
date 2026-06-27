@@ -243,23 +243,20 @@ export default function TTSPage() {
       {/* -my-8 cancels the py-8 from MainLayout's <main> so the sidebar can be sticky top-0 */}
       <div className="-my-8 flex min-h-screen">
         {/* ── Center content column ───────────────────────────────── */}
-        <div className="flex min-w-0 flex-1 justify-center px-6 py-10 pb-28">
-          <div className="w-full max-w-2xl space-y-6">
+        <div className="flex min-w-0 flex-1 justify-center px-6 py-5 pb-24">
+          <div className="w-full max-w-2xl space-y-3">
             {/* Heading */}
-            <div className="flex items-center gap-4 pb-2">
-              <Mic2 className="h-10 w-10 shrink-0 text-primary" />
+            <div className="flex items-center gap-3">
+              <Mic2 className="h-7 w-7 shrink-0 text-primary" />
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-xl font-bold tracking-tight">
                   Синтез мовлення
                 </h1>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  Генерація аудіо через ElevenLabs TTS
-                </p>
               </div>
             </div>
 
             {/* File name */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Назва файлу
               </Label>
@@ -268,7 +265,7 @@ export default function TTSPage() {
                 onChange={(e) => setFileName(e.target.value)}
                 placeholder="output"
                 className={cn(
-                  'h-11 text-base font-semibold',
+                  'h-9 font-semibold',
                   fileNameInvalid &&
                     'border-destructive focus-visible:ring-destructive',
                 )}
@@ -307,7 +304,7 @@ export default function TTSPage() {
             </div>
 
             {/* Context before */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Контекст до{' '}
                 <span className="font-normal normal-case opacity-60">
@@ -317,14 +314,13 @@ export default function TTSPage() {
               <Textarea
                 value={textBefore}
                 onChange={(e) => setTextBefore(e.target.value)}
-                placeholder="Текст перед основним (впливає на просодію)"
-                rows={2}
-                className="min-h-16 resize-y"
+                rows={1}
+                className="min-h-9 resize-y"
               />
             </div>
 
             {/* Main text */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Текст для озвучення
               </Label>
@@ -332,13 +328,13 @@ export default function TTSPage() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Введіть текст для синтезу…"
-                rows={12}
-                className="min-h-64 resize-y"
+                rows={5}
+                className="min-h-28 resize-y"
               />
             </div>
 
             {/* Context after */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Контекст після{' '}
                 <span className="font-normal normal-case opacity-60">
@@ -348,14 +344,13 @@ export default function TTSPage() {
               <Textarea
                 value={textAfter}
                 onChange={(e) => setTextAfter(e.target.value)}
-                placeholder="Текст після основного (впливає на просодію)"
-                rows={2}
-                className="min-h-16 resize-y"
+                rows={1}
+                className="min-h-9 resize-y"
               />
             </div>
 
             {/* Actions */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -375,7 +370,7 @@ export default function TTSPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={isGenerating || fileNameInvalid}
-                  className="h-12 flex-1 text-base"
+                  className="h-10 flex-1"
                 >
                   {isGenerating ? 'Генерація…' : 'Генерувати'}
                 </Button>
@@ -383,7 +378,7 @@ export default function TTSPage() {
                   variant="outline"
                   onClick={handleDownload}
                   disabled={!downloadBlob}
-                  className="h-12 px-6"
+                  className="h-10 px-6"
                 >
                   Завантажити
                 </Button>
