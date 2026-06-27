@@ -19,8 +19,20 @@ const WORD_MAP = [
   ['драйвовий', 'драйво́вий'],
   ['RCS|РЦС', 'ер-це-ес'],
 ]
-// Pre-compile regexes once at module load.
 const WORD_REPLACEMENTS = WORD_MAP.map(([source, replacement]) => ({
+  re: wbr(source),
+  replacement,
+}))
+
+// Telecom abbreviations — add entries here to extend without code changes.
+const TELECOM_MAP = [
+  ['SMS|СМС', 'есемес'],
+  ['АП', 'абонентська плата'],
+  ['RLH|RLAH|РЛХ', 'роумінг як вдома'],
+  ['ДІ', 'Домашній Інтернет'],
+  ['Т[ВБ]', 'тебе'],
+]
+const TELECOM_REPLACEMENTS = TELECOM_MAP.map(([source, replacement]) => ({
   re: wbr(source),
   replacement,
 }))
@@ -38,16 +50,17 @@ function replaceUnit(text, unitPattern, one, few, many) {
   )
 }
 
-/**
- * Normalizes text for use with ElevenLabs TTS (Ukrainian).
- * @param {string} input
- * @returns {string}
- */
+// Callback for "N Xбіт/с" patterns; falls back to the many-form when N is absent
+const speedCb = (one, few, many) => (_, n) =>
+  n ? `${n} ${pluralUA(n, one, few, many)} на секунду` : `${many} на секунду`
+
 export default function normalizeForTTS(input) {
-  let text = String(input ?? '').normalize('NFC')
+  let text = String(input ?? '')
+    .normalize('NFC')
+    .replace(/\r\n?/g, '\n')
 
   // --- Currency ---
-  // Compound "N грн/міс" and "N грн/рік" must precede standalone "N грн"
+  // Compound forms (грн/міс, грн/рік) must come before standalone грн
   text = text.replace(
     /(?:(\d+)\s*)?грн\.?\s*\/\s*м[іi]с(?!\p{L})/giu,
     (_, n) =>
@@ -63,12 +76,10 @@ export default function normalizeForTTS(input) {
         : 'гривень на рік',
   )
   text = replaceUnit(text, 'грн', 'гривня', 'гривні', 'гривень')
-  // "$100" or "100$"
   text = text.replace(/\$\s*(\d+)|(\d+)\s*\$/gu, (_, pre, post) => {
     const n = pre ?? post
     return `${n} ${pluralUA(n, 'долар', 'долари', 'доларів')}`
   })
-  // "€100" or "100€"
   text = text.replace(
     /€\s*(\d+)|(\d+)\s*€/gu,
     (_, pre, post) => `${pre ?? post} євро`,
@@ -76,30 +87,27 @@ export default function normalizeForTTS(input) {
   text = replaceUnit(text, 'USD', 'долар', 'долари', 'доларів')
   text = text.replace(numUnit('EUR'), (_, n) => `${n} євро`)
 
-  // --- Data storage ---
-  text = replaceUnit(text, 'ТБ|TB', 'терабайт', 'терабайти', 'терабайтів')
+  // --- Storage ---
+  // text = replaceUnit(text, 'ТБ|TB', 'терабайт', 'терабайти', 'терабайтів')
   text = replaceUnit(text, 'ГБ|GB', 'гігабайт', 'гігабайти', 'гігабайтів')
   text = replaceUnit(text, 'МБ|MB', 'мегабайт', 'мегабайти', 'мегабайтів')
   text = replaceUnit(text, 'КБ|KB', 'кілобайт', 'кілобайти', 'кілобайтів')
 
-  // --- Data speed ---
-  text = text.replace(/(?:(\d+)\s*)?Гбіт[\\/]с(?!\p{L})/giu, (_, n) =>
-    n
-      ? `${n} ${pluralUA(n, 'гігабіт', 'гігабіти', 'гігабітів')} на секунду`
-      : 'гігабітів на секунду',
+  // --- Speed ---
+  text = text.replace(
+    /(?:(\d+)\s*)?Гбіт[\\/]с(?!\p{L})/giu,
+    speedCb('гігабіт', 'гігабіти', 'гігабітів'),
   )
-  text = text.replace(/(?:(\d+)\s*)?Мбіт[\\/]с(?!\p{L})/giu, (_, n) =>
-    n
-      ? `${n} ${pluralUA(n, 'мегабіт', 'мегабіти', 'мегабітів')} на секунду`
-      : 'мегабітів на секунду',
+  text = text.replace(
+    /(?:(\d+)\s*)?Мбіт[\\/]с(?!\p{L})/giu,
+    speedCb('мегабіт', 'мегабіти', 'мегабітів'),
   )
-  text = text.replace(/(?:(\d+)\s*)?Кбіт[\\/]с(?!\p{L})/giu, (_, n) =>
-    n
-      ? `${n} ${pluralUA(n, 'кілобіт', 'кілобіти', 'кілобітів')} на секунду`
-      : 'кілобітів на секунду',
+  text = text.replace(
+    /(?:(\d+)\s*)?Кбіт[\\/]с(?!\p{L})/giu,
+    speedCb('кілобіт', 'кілобіти', 'кілобітів'),
   )
 
-  // --- Time units ---
+  // --- Time ---
   text = replaceUnit(text, 'год', 'година', 'години', 'годин')
   text = replaceUnit(text, 'хв', 'хвилина', 'хвилини', 'хвилин')
   text = replaceUnit(text, 'дн', 'день', 'дні', 'днів')
@@ -115,14 +123,14 @@ export default function normalizeForTTS(input) {
   text = text.replace(/№\s*(\d+)/g, 'номер $1')
 
   // --- Telecom abbreviations ---
-  text = text.replace(wbr('SMS|СМС'), 'есемес')
-  text = text.replace(/(?<!\p{L})ЗСУ\+(?!\p{L})/giu, 'зе-есу́ +')
-  text = text.replace(wbr('АП'), 'абонентська плата')
-  text = text.replace(wbr('Т[ВБ]'), 'тебе')
+  for (const {re, replacement} of TELECOM_REPLACEMENTS) {
+    text = text.replace(re, replacement)
+  }
+  text = text.replace(/(?<!\p{L})ЗСУ\+(?!\p{L})/giu, 'зе-есу́ +') // + is part of the brand
   text = text.replace(/ВСЕ РАЗОМ/gi, 'Все Рáзом')
   text = text.replace(/LOVE UA/gi, 'лав юей')
 
-  // --- Accents & abbreviations ---
+  // --- Accents & word corrections ---
   for (const {re, replacement} of WORD_REPLACEMENTS) {
     text = text.replace(re, (match) => {
       const firstUp =
@@ -136,9 +144,6 @@ export default function normalizeForTTS(input) {
 
   // --- Formatting ---
   text = text.replace(/(?<=\s)-(?=\s)/g, '—')
-
-  // Paragraph normalization: end each paragraph with punctuation, join with ";"
-  text = text.replace(/\r\n?/g, '\n')
   text = text
     .split(/\n\s*\n/)
     .map((block) => block.trim())
