@@ -352,17 +352,17 @@ export default function ElevenlabsBulkProcessorPage() {
       {/* -my-8 cancels the py-8 from MainLayout's <main> so the sidebar can be sticky top-0 */}
       <div className="-my-8 flex min-h-screen">
         {/* ── Main content column ─────────────────────────────────── */}
-        <div className="flex min-w-0 flex-1 justify-center px-6 py-8 pb-28">
+        <div className="flex min-w-0 flex-1 justify-center px-6 py-4 pb-20">
           <div className="w-full max-w-3xl">
             <Card className="border-none bg-transparent shadow-xl">
-              <CardHeader className="border-b pb-6 text-center">
-                <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
-                  <FileAudio className="h-8 w-8 text-primary" />
+              <CardHeader className="border-b pb-3 text-center">
+                <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
+                  <FileAudio className="h-6 w-6 text-primary" />
                   Excel у голос
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="mt-2 space-y-4">
+              <CardContent className="mt-1 space-y-3">
                 <FileUpload file={file} onFileChange={handleFileChange} />
 
                 <GenerateButton

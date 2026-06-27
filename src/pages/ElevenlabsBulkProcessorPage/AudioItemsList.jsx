@@ -1,14 +1,17 @@
 import {Button} from '@/components/ui/button'
-import {Card} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
 import {Play, Pause, RotateCcw, Download, Loader2} from 'lucide-react'
 import {cn} from '@/lib/utils'
 
 const STATUS_CONFIG = {
-  pending:    {label: 'Очікує',  className: 'bg-muted text-muted-foreground'},
+  pending: {label: 'Очікує', className: 'bg-muted text-muted-foreground'},
   processing: {label: 'Обробка', className: 'bg-primary/15 text-primary'},
-  complete:   {label: 'Готово',  className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'},
-  error:      {label: 'Помилка', className: 'bg-destructive/15 text-destructive'},
+  complete: {
+    label: 'Готово',
+    className:
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  },
+  error: {label: 'Помилка', className: 'bg-destructive/15 text-destructive'},
 }
 
 function getGroupStatus(groupItems) {
@@ -36,18 +39,20 @@ export default function AudioItemsList({
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {items.length > 0 && (
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Аудіофайли ({items.length})</h3>
+          <h3 className="text-base font-semibold">
+            Аудіофайли ({items.length})
+          </h3>
           {completedItems.length > 0 && (
             <div className="flex gap-2">
-              <Button onClick={onPlayAll} variant="outline">
-                <Play className="mr-2 h-4 w-4" />
+              <Button onClick={onPlayAll} variant="outline" size="sm">
+                <Play className="mr-1.5 h-3.5 w-3.5" />
                 Відтворити все
               </Button>
-              <Button onClick={onDownloadAll} variant="outline">
-                <Download className="mr-2 h-4 w-4" />
+              <Button onClick={onDownloadAll} variant="outline" size="sm">
+                <Download className="mr-1.5 h-3.5 w-3.5" />
                 Завантажити все ({completedItems.length})
               </Button>
             </div>
@@ -55,7 +60,7 @@ export default function AudioItemsList({
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="divide-y divide-border">
         {resolvedGroups.map((groupItems) => {
           const status = getGroupStatus(groupItems)
           const isActive = groupItems.some((i) => i.id === activeAudioId)
@@ -64,27 +69,40 @@ export default function AudioItemsList({
           const {label, className} = STATUS_CONFIG[status]
 
           return (
-            <Card
+            <div
               key={groupItems[0].id}
-              className={cn('p-4 transition-colors', isActive && 'ring-1 ring-primary')}
+              className={cn(
+                'py-2 transition-colors',
+                isActive && 'bg-primary/5',
+              )}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 truncate font-medium" title={fileNames}>
+                  <div
+                    className="mb-0.5 truncate text-sm font-medium"
+                    title={fileNames}
+                  >
                     {fileNames}
                   </div>
                   <Textarea
                     value={groupItems[0].text}
                     onChange={(e) =>
-                      groupItems.forEach((i) => onUpdateText(i.id, e.target.value))
+                      groupItems.forEach((i) =>
+                        onUpdateText(i.id, e.target.value),
+                      )
                     }
-                    className="min-h-30 resize-y"
+                    className="min-h-27 resize-y text-sm"
                     placeholder="Введіть текст для TTS..."
                   />
                 </div>
 
-                <div className="flex w-15 shrink-0 flex-col items-center gap-2">
-                  <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', className)}>
+                <div className="flex w-14 shrink-0 flex-col items-center gap-1">
+                  <span
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-xs font-medium',
+                      className,
+                    )}
+                  >
                     {label}
                   </span>
 
@@ -92,7 +110,7 @@ export default function AudioItemsList({
                     <>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => onPlay(playableItem.id)}
                       >
                         {isPlaying && playableItem.id === activeAudioId ? (
@@ -103,8 +121,10 @@ export default function AudioItemsList({
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => onDownloadGroup(groupItems.map((i) => i.id))}
+                        variant="ghost"
+                        onClick={() =>
+                          onDownloadGroup(groupItems.map((i) => i.id))
+                        }
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -113,7 +133,7 @@ export default function AudioItemsList({
 
                   <Button
                     size="sm"
-                    variant={status === 'processing' ? 'secondary' : 'outline'}
+                    variant={status === 'processing' ? 'secondary' : 'ghost'}
                     onClick={() => onRegenerate(groupItems.map((i) => i.id))}
                     disabled={status === 'processing'}
                   >
@@ -125,7 +145,7 @@ export default function AudioItemsList({
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           )
         })}
       </div>
