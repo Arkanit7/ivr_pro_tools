@@ -10,8 +10,6 @@ import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
 import {Input} from '@/components/ui/input'
 import {Label} from '@/components/ui/label'
-import {Slider} from '@/components/ui/slider'
-import {Switch} from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -19,12 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import {TooltipProvider} from '@/components/ui/tooltip'
+import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
+import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNormalizationSelect'
 
 // API key is read from env — exposes the key in the client bundle.
 // For local/dev use only; use a backend proxy for anything shared.
@@ -60,32 +55,6 @@ function pcm16ToWavBlob(pcm, sampleRate) {
   return new Blob([buf], {type: 'audio/wav'})
 }
 
-function SliderField({label, tooltip, value, onValueChange, min, max, step, format}) {
-  return (
-    <div className="flex flex-col gap-3 p-4">
-      <div className="flex items-center justify-between gap-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Label className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2">
-              {label}
-            </Label>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltip}</p>
-          </TooltipContent>
-        </Tooltip>
-        <span className="tabular-nums text-sm text-muted-foreground">{format(value)}</span>
-      </div>
-      <Slider
-        value={[value]}
-        onValueChange={([v]) => onValueChange(v)}
-        min={min}
-        max={max}
-        step={step}
-      />
-    </div>
-  )
-}
 
 export default function TTSPage() {
   const [textBefore, setTextBefore] = useLocalStorage('tts_textBefore', '')
@@ -96,7 +65,6 @@ export default function TTSPage() {
   const [stability, setStability] = useLocalStorage('tts_stability', 0.75)
   const [similarityBoost, setSimilarityBoost] = useLocalStorage('tts_similarityBoost', 1.0)
   const [style, setStyle] = useLocalStorage('tts_style', 0)
-  const [speakerBoost, setSpeakerBoost] = useLocalStorage('tts_speakerBoost', true)
   const [speed, setSpeed] = useLocalStorage('tts_speed', 1.0)
   const [textNormalization, setTextNormalization] = useLocalStorage('tts_textNormalization', 'on')
   const [saveFormat, setSaveFormat] = useLocalStorage('tts_saveFormat', 'alw')
@@ -168,7 +136,7 @@ export default function TTSPage() {
         stability,
         similarity_boost: similarityBoost,
         style,
-        use_speaker_boost: speakerBoost,
+        use_speaker_boost: true,
         speed,
       },
     }
@@ -388,97 +356,21 @@ export default function TTSPage() {
             </Select>
           </div>
 
-          <SliderField
-            label="Швидкість"
-            tooltip="Контролює швидкість мовлення. Значення нижче 1.0 сповільнюють, вище 1.0 — прискорюють. Екстремальні значення можуть знизити якість генерації."
-            value={speed}
-            onValueChange={setSpeed}
-            min={0.7}
-            max={1.2}
-            step={0.01}
-            format={(v) => v.toFixed(2)}
-          />
-          <SliderField
-            label="Стабільність"
-            tooltip="Вища стабільність робить голос консистентнішим між генераціями, але може звучати монотонно. Для довгих текстів рекомендуємо знижувати це значення."
-            value={stability}
-            onValueChange={setStability}
-            min={0}
-            max={1}
-            step={0.01}
-            format={(v) => `${(v * 100).toFixed()}%`}
-          />
-          <SliderField
-            label="Схожість"
-            tooltip="Висока схожість покращує чіткість голосу та відповідність оригіналу. Дуже високі значення можуть спричинити артефакти."
-            value={similarityBoost}
-            onValueChange={setSimilarityBoost}
-            min={0}
-            max={1}
-            step={0.01}
-            format={(v) => `${(v * 100).toFixed()}%`}
-          />
-          <SliderField
-            label="Стиль"
-            tooltip="Високі значення підкреслюють стиль мовлення. Можуть спричинити нестабільність генерації. Значення 0.0 — стандартне та значно прискорює генерацію."
-            value={style}
-            onValueChange={setStyle}
-            min={0}
-            max={1}
-            step={0.01}
-            format={(v) => `${(v * 100).toFixed()}%`}
+          <VoiceSettings
+            speed={speed}
+            setSpeed={setSpeed}
+            stability={stability}
+            setStability={setStability}
+            similarityBoost={similarityBoost}
+            setSimilarityBoost={setSimilarityBoost}
+            styleExaggeration={style}
+            setStyleExaggeration={setStyle}
           />
 
-          {/* Speaker boost */}
-          <div className="flex flex-col gap-3 p-4">
-            <div className="flex items-center justify-between">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Label
-                    htmlFor="speakerBoost"
-                    className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2"
-                  >
-                    Підсилення динаміка
-                  </Label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Підвищує схожість з оригінальним голосом. Рекомендується для більшості випадків.</p>
-                </TooltipContent>
-              </Tooltip>
-              <Switch
-                id="speakerBoost"
-                checked={speakerBoost}
-                onCheckedChange={setSpeakerBoost}
-              />
-            </div>
-          </div>
-
-          {/* Text normalization */}
-          <div className="flex flex-col gap-3 p-4">
-            <div className="flex items-center justify-between gap-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Label className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2">
-                    Нормалізація тексту
-                  </Label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Визначає, чи застосовує ElevenLabs нормалізацію тексту. «auto» — автоматично, «on» — завжди, «off» — ніколи.</p>
-                </TooltipContent>
-              </Tooltip>
-              <span className="text-sm capitalize text-muted-foreground">{textNormalization}</span>
-            </div>
-            <Select value={textNormalization} onValueChange={setTextNormalization}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">auto</SelectItem>
-                <SelectItem value="on">on</SelectItem>
-                <SelectItem value="off">off</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <TextNormalizationSelect
+            applyTextNormalization={textNormalization}
+            setApplyTextNormalization={setTextNormalization}
+          />
 
           {/* Save format */}
           <div className="flex flex-col gap-3 p-4">
