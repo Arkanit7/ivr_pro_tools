@@ -321,7 +321,7 @@ export default function ElevenlabsBulkProcessorPage() {
         {/* ── Main content column ─────────────────────────────────── */}
         <div className="flex-1 min-w-0 flex justify-center py-8 px-6 pb-28">
           <div className="w-full max-w-3xl">
-            <Card className="border-none shadow-xl">
+            <Card className="border-none shadow-xl bg-transparent">
               <CardHeader className="border-b pb-6 text-center">
                 <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
                   <FileAudio className="h-8 w-8 text-primary" />
@@ -363,7 +363,7 @@ export default function ElevenlabsBulkProcessorPage() {
           </div>
 
           {/* Model */}
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+          <div className="flex flex-col gap-3 p-4">
             <Label>Модель</Label>
             <Select value={model} onValueChange={setModel}>
               <SelectTrigger>
@@ -398,7 +398,7 @@ export default function ElevenlabsBulkProcessorPage() {
           />
 
           {/* Save format */}
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+          <div className="flex flex-col gap-3 p-4">
             <Label>Зберегти як</Label>
             <Select value={saveFormat} onValueChange={setSaveFormat}>
               <SelectTrigger>

@@ -35,7 +35,7 @@ export default function TextNormalizerPage() {
 
   return (
     <PageShell>
-      <Card className="w-full max-w-4xl border-none shadow-xl">
+      <Card className="w-full max-w-4xl border-none shadow-xl bg-transparent">
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
             <FileText className="h-8 w-8 text-primary" />
