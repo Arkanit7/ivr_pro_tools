@@ -8,6 +8,23 @@ function wbr(pattern, flags = 'giu') {
   return new RegExp(`${LB}(?:${pattern})${LA}`, flags)
 }
 
+// Accent / abbreviation map — add entries here to extend without code changes.
+// Accents use U+0301 (COMBINING ACUTE ACCENT) placed after the stressed vowel.
+const WORD_MAP = [
+  ['мережа', 'мере́жа'],
+  ['мережі', 'мере́жі'],
+  ['мережу', 'мере́жу'],
+  ['натисніть', 'нати́сніть'],
+  ['натиснути', 'нати́снути'],
+  ['драйвовий', 'драйво́вий'],
+  ['RCS|РЦС', 'ер-це-ес'],
+]
+// Pre-compile regexes once at module load.
+const WORD_REPLACEMENTS = WORD_MAP.map(([source, replacement]) => ({
+  re: wbr(source),
+  replacement,
+}))
+
 // Regex matching "<digits> <unit>[.]" with no letter after
 function numUnit(unitPattern) {
   return new RegExp(String.raw`(\d+)\s*(?:${unitPattern})\.?${LA}`, 'giu')
@@ -103,15 +120,39 @@ export default function normalizeForTTS(input) {
   text = text.replace(wbr('АП'), 'абонентська плата')
   text = text.replace(wbr('Т[ВБ]'), 'тебе')
   text = text.replace(/ВСЕ РАЗОМ/gi, 'Все Рáзом')
-  text = text.replace(/LOVE UA/gi, 'Все Рáзом')
+  text = text.replace(/LOVE UA/gi, 'лав юей')
 
-  // --- Accents ---
-  text = text.replace(wbr('натисніть'), 'нати́снІть')
-  text = text.replace(wbr('драйвовий'), 'драйво́вий')
+  // --- Accents & abbreviations ---
+  for (const {re, replacement} of WORD_REPLACEMENTS) {
+    text = text.replace(re, (match) => {
+      const firstUp =
+        match[0] !== match[0].toLowerCase() &&
+        match[0] === match[0].toUpperCase()
+      return firstUp
+        ? replacement[0].toUpperCase() + replacement.slice(1)
+        : replacement
+    })
+  }
 
   // --- Formatting ---
   text = text.replace(/(?<=\s)-(?=\s)/g, '—')
-  text = text.replace(/(?<![.!?;\-–—]|\r?\n)(\r?\n)/g, ';$1')
+
+  // Paragraph normalization: end each paragraph with punctuation, join with ";"
+  text = text.replace(/\r\n?/g, '\n')
+  text = text
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) =>
+      block
+        .split('\n')
+        .map((line) => {
+          const t = line.trimEnd()
+          return /\p{P}$/u.test(t) ? t : t + '.'
+        })
+        .join('\n'),
+    )
+    .join('\n;\n')
 
   return text
 }
