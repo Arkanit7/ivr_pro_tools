@@ -1,6 +1,12 @@
 import {useState} from 'react'
 import * as XLSX from 'xlsx'
-import {Card, CardContent, CardHeader, CardTitle, CardDescription} from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import {FileSpreadsheet} from 'lucide-react'
 import {PageShell} from '@/components/PageShell'
 import FileUpload from '@/components/FileUpload'
@@ -45,14 +51,15 @@ export default function ExcelNormalizerPage() {
 
   return (
     <PageShell>
-      <Card className="w-full max-w-md border-none shadow-xl bg-transparent">
+      <Card className="w-full max-w-md border-none bg-transparent shadow-xl">
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
             <FileSpreadsheet className="h-8 w-8 text-primary" />
             Нормалізатор Excel
           </CardTitle>
           <CardDescription>
-            Нормалізує другий стовпець Excel-файлу для TTS та завантажує результат автоматично
+            Нормалізує другий стовпець Excel-файлу для TTS та завантажує
+            результат автоматично
           </CardDescription>
         </CardHeader>
 
@@ -61,7 +68,7 @@ export default function ExcelNormalizerPage() {
             file={file}
             onFileChange={handleFileChange}
             defaultText="Завантажте Excel файл"
-            instructionText="Стовп A: Назва файлу | Стовп B: Текст (буде нормалізовано)"
+            instructionText="Стовпець A: Назва промпта | Стовпець B: Текст промпта (буде нормалізовано)"
           />
         </CardContent>
       </Card>
