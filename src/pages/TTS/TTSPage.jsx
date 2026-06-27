@@ -160,7 +160,7 @@ export default function TTSPage() {
     const outputFormat = fmt?.outputFormat ?? 'alaw_8000'
 
     const body = {
-      text: text.trim(),
+      text: normalizeForTTS(text.trim()),
       model_id: model,
       language_code: 'uk',
       apply_text_normalization: textNormalization,
