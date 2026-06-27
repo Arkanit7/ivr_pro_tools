@@ -408,7 +408,7 @@ export default function ElevenlabsBulkProcessorPage() {
         </div>
 
         {/* ── Right settings sidebar ──────────────────────────────── */}
-        <aside className="scrollbar-thin sticky top-0 flex h-screen w-80 shrink-0 scroll-pb-28 flex-col gap-1 overflow-y-auto border-l border-border bg-background p-3">
+        <aside className="scrollbar-thin sticky top-0 flex h-screen w-80 shrink-0 flex-col gap-1 overflow-y-auto border-l border-border bg-background p-3 pb-20">
           <div className="py-1 pl-2">
             <p className="text-lg font-semibold whitespace-nowrap">
               Налаштування
@@ -474,7 +474,7 @@ export default function ElevenlabsBulkProcessorPage() {
       </div>
 
       {activeAudioItem && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 py-4 pr-6 pl-22 backdrop-blur-xl">
           <div className="mx-auto flex max-w-4xl items-center gap-4">
             <div className="w-52 shrink-0 overflow-hidden">
               <p className="truncate text-sm font-semibold">
@@ -500,7 +500,10 @@ export default function ElevenlabsBulkProcessorPage() {
                 checked={autoplay}
                 onCheckedChange={setAutoplay}
               />
-              <Label htmlFor="autoplay-switch" className="cursor-pointer whitespace-nowrap text-sm">
+              <Label
+                htmlFor="autoplay-switch"
+                className="cursor-pointer text-sm whitespace-nowrap"
+              >
                 Авто
               </Label>
             </div>
