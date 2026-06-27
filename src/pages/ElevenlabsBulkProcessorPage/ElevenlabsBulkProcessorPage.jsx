@@ -44,12 +44,21 @@ function pcm16ToWavBlob(pcm, sampleRate) {
   const dataSize = pcm.length * 2
   const buf = new ArrayBuffer(44 + dataSize)
   const v = new DataView(buf)
-  const str = (off, s) => [...s].forEach((c, i) => v.setUint8(off + i, c.charCodeAt(0)))
-  str(0, 'RIFF'); v.setUint32(4, 36 + dataSize, true); str(8, 'WAVE')
-  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true)
-  v.setUint16(22, 1, true); v.setUint32(24, sampleRate, true)
-  v.setUint32(28, sampleRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true)
-  str(36, 'data'); v.setUint32(40, dataSize, true)
+  const str = (off, s) =>
+    [...s].forEach((c, i) => v.setUint8(off + i, c.charCodeAt(0)))
+  str(0, 'RIFF')
+  v.setUint32(4, 36 + dataSize, true)
+  str(8, 'WAVE')
+  str(12, 'fmt ')
+  v.setUint32(16, 16, true)
+  v.setUint16(20, 1, true)
+  v.setUint16(22, 1, true)
+  v.setUint32(24, sampleRate, true)
+  v.setUint32(28, sampleRate * 2, true)
+  v.setUint16(32, 2, true)
+  v.setUint16(34, 16, true)
+  str(36, 'data')
+  v.setUint32(40, dataSize, true)
   for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, pcm[i], true)
   return new Blob([buf], {type: 'audio/wav'})
 }
@@ -67,12 +76,21 @@ export default function ElevenlabsBulkProcessorPage() {
   const [progress, setProgress] = useState({current: 0, total: 0})
   const [audioItems, setAudioItems] = useState([])
   const [audioItemGroups, setAudioItemGroups] = useState([])
-  const [model, setModel] = useLocalStorage('bulk_model', 'eleven_multilingual_v2')
+  const [model, setModel] = useLocalStorage(
+    'bulk_model',
+    'eleven_multilingual_v2',
+  )
   const [saveFormat, setSaveFormat] = useLocalStorage('bulk_saveFormat', 'wav')
   const [speed, setSpeed] = useLocalStorage('vs_speed', 1.0)
   const [stability, setStability] = useLocalStorage('vs_stability', 0.75)
-  const [similarityBoost, setSimilarityBoost] = useLocalStorage('vs_similarityBoost', 1)
-  const [styleExaggeration, setStyleExaggeration] = useLocalStorage('vs_styleExaggeration', 0)
+  const [similarityBoost, setSimilarityBoost] = useLocalStorage(
+    'vs_similarityBoost',
+    1,
+  )
+  const [styleExaggeration, setStyleExaggeration] = useLocalStorage(
+    'vs_styleExaggeration',
+    0,
+  )
   const [applyTextNormalization, setApplyTextNormalization] = useLocalStorage(
     'vs_applyTextNormalization',
     'on',
@@ -88,7 +106,12 @@ export default function ElevenlabsBulkProcessorPage() {
     if (prevFormatRef.current === saveFormat) return
     prevFormatRef.current = saveFormat
     setAudioItems((prev) =>
-      prev.map((item) => ({...item, status: 'pending', audioBlob: null, audioUrl: null})),
+      prev.map((item) => ({
+        ...item,
+        status: 'pending',
+        audioBlob: null,
+        audioUrl: null,
+      })),
     )
     setStatus('idle')
     setActiveAudioId(null)
@@ -270,14 +293,23 @@ export default function ElevenlabsBulkProcessorPage() {
       zip.file(toFileName(item), item.audioBlob)
     })
     const baseName = file.name.replace(/\.[^.]+$/, '')
-    saveAs(await zip.generateAsync({type: 'blob'}), `${baseName}_${formatDate()}.zip`)
+    saveAs(
+      await zip.generateAsync({type: 'blob'}),
+      `${baseName}_${formatDate()}.zip`,
+    )
   }
 
   const updateItemText = (itemId, newText) => {
     setAudioItems((prev) =>
       prev.map((item) =>
         item.id === itemId
-          ? {...item, text: newText, status: 'pending', audioBlob: null, audioUrl: null}
+          ? {
+              ...item,
+              text: newText,
+              status: 'pending',
+              audioBlob: null,
+              audioUrl: null,
+            }
           : item,
       ),
     )
@@ -294,7 +326,9 @@ export default function ElevenlabsBulkProcessorPage() {
     for (const item of audioItems) {
       if (!seen.has(item.text)) {
         seen.add(item.text)
-        uniqueGroups.push(audioItems.filter((i) => i.text === item.text).map((i) => i.id))
+        uniqueGroups.push(
+          audioItems.filter((i) => i.text === item.text).map((i) => i.id),
+        )
       }
     }
 
@@ -316,12 +350,11 @@ export default function ElevenlabsBulkProcessorPage() {
   return (
     <TooltipProvider>
       {/* -my-8 cancels the py-8 from MainLayout's <main> so the sidebar can be sticky top-0 */}
-      <div className="flex -my-8 min-h-screen">
-
+      <div className="-my-8 flex min-h-screen">
         {/* ── Main content column ─────────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex justify-center py-8 px-6 pb-28">
+        <div className="flex min-w-0 flex-1 justify-center px-6 py-8 pb-28">
           <div className="w-full max-w-3xl">
-            <Card className="border-none shadow-xl bg-transparent">
+            <Card className="border-none bg-transparent shadow-xl">
               <CardHeader className="border-b pb-6 text-center">
                 <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
                   <FileAudio className="h-8 w-8 text-primary" />
@@ -357,13 +390,15 @@ export default function ElevenlabsBulkProcessorPage() {
         </div>
 
         {/* ── Right settings sidebar ──────────────────────────────── */}
-        <aside className="scrollbar-thin sticky top-0 h-screen w-108 shrink-0 flex flex-col gap-4 overflow-y-auto border-l border-border bg-background p-3 pb-28">
-          <div className="pl-2 py-1">
-            <p className="text-lg font-semibold whitespace-nowrap">Налаштування</p>
+        <aside className="scrollbar-thin sticky top-0 flex h-screen w-80 shrink-0 scroll-pb-28 flex-col gap-1 overflow-y-auto border-l border-border bg-background p-3">
+          <div className="py-1 pl-2">
+            <p className="text-lg font-semibold whitespace-nowrap">
+              Налаштування
+            </p>
           </div>
 
           {/* Model */}
-          <div className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-3 p-1.5">
             <Label>Модель</Label>
             <Select value={model} onValueChange={setModel}>
               <SelectTrigger>
@@ -398,7 +433,7 @@ export default function ElevenlabsBulkProcessorPage() {
           />
 
           {/* Save format */}
-          <div className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-3 p-1.5">
             <Label>Зберегти як</Label>
             <Select value={saveFormat} onValueChange={setSaveFormat}>
               <SelectTrigger>
@@ -424,8 +459,12 @@ export default function ElevenlabsBulkProcessorPage() {
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
           <div className="mx-auto flex max-w-4xl items-center gap-4">
             <div className="w-52 shrink-0 overflow-hidden">
-              <p className="truncate text-sm font-semibold">{activeAudioItem.fileName}</p>
-              <p className="truncate text-xs text-muted-foreground">{activeAudioItem.text}</p>
+              <p className="truncate text-sm font-semibold">
+                {activeAudioItem.fileName}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {activeAudioItem.text}
+              </p>
             </div>
             <AudioPlayer
               ref={playerRef}
