@@ -151,6 +151,19 @@
   }
 }
 
+/* ── Thin sidebar scrollbar ──────────────────────────────────────────────── */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.5 0 0 / 0.2) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { width: 3px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0 0 / 0.2);
+  border-radius: 9999px;
+}
+.dark .scrollbar-thin::-webkit-scrollbar-thumb { background: oklch(0.7 0 0 / 0.2); }
+
 /* ── Accent colour overrides ─────────────────────────────────────────────── */
 :root[data-accent="blue"]   { --primary: oklch(0.46 0.22 250); --ring: oklch(0.46 0.22 250); }
 :root[data-accent="purple"] { --primary: oklch(0.46 0.22 300); --ring: oklch(0.46 0.22 300); }
