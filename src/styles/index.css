@@ -168,7 +168,7 @@
 :root[data-accent="blue"]   { --primary: oklch(0.46 0.22 250); --ring: oklch(0.46 0.22 250); }
 :root[data-accent="purple"] { --primary: oklch(0.46 0.22 300); --ring: oklch(0.46 0.22 300); }
 :root[data-accent="teal"]   { --primary: oklch(0.46 0.18 195); --ring: oklch(0.46 0.18 195); }
-:root[data-accent="green"]  { --primary: oklch(0.46 0.18 150); --ring: oklch(0.46 0.18 150); }
+:root[data-accent="green"]  { --primary: hsl(135 100% 50%); --ring: hsl(135 100% 50%); }
 :root[data-accent="orange"] { --primary: oklch(0.56 0.20  50); --ring: oklch(0.56 0.20  50); }
 :root[data-accent="yellow"] { --primary: hsl(48 100% 46%); --primary-foreground: oklch(0.145 0 0); --ring: hsl(48 100% 46%); }
 :root[data-accent="red"]    { --primary: oklch(0.50 0.22  25); --ring: oklch(0.50 0.22  25); }
@@ -176,7 +176,7 @@
 .dark[data-accent="blue"]   { --primary: oklch(0.50 0.22 250); --ring: oklch(0.50 0.22 250); }
 .dark[data-accent="purple"] { --primary: oklch(0.50 0.22 300); --ring: oklch(0.50 0.22 300); }
 .dark[data-accent="teal"]   { --primary: oklch(0.50 0.18 195); --ring: oklch(0.50 0.18 195); }
-.dark[data-accent="green"]  { --primary: oklch(0.50 0.18 150); --ring: oklch(0.50 0.18 150); }
+.dark[data-accent="green"]  { --primary: hsl(135 100% 50%); --ring: hsl(135 100% 50%); }
 .dark[data-accent="orange"] { --primary: oklch(0.62 0.20  50); --ring: oklch(0.62 0.20  50); }
 .dark[data-accent="yellow"] { --primary: hsl(48 100% 46%); --primary-foreground: oklch(0.145 0 0); --ring: hsl(48 100% 46%); }
 .dark[data-accent="red"]    { --primary: oklch(0.54 0.22  25); --ring: oklch(0.54 0.22  25); }
