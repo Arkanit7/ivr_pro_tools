@@ -3,6 +3,28 @@ import {Textarea} from '@/components/ui/textarea'
 import {Play, Pause, RotateCcw, Download, Loader2} from 'lucide-react'
 import {cn} from '@/lib/utils'
 
+const VALID_FILENAME_CHAR = /^[a-zA-Z0-9_\-.]$/
+
+function FileNameDisplay({name}) {
+  const hasInvalid = [...name].some((c) => !VALID_FILENAME_CHAR.test(c))
+  if (!hasInvalid) return <span className="truncate">{name}</span>
+  return (
+    <span className="font-mono">
+      {[...name].map((char, i) => {
+        const bad = !VALID_FILENAME_CHAR.test(char)
+        const display = char === ' ' ? '␣' : char === '\t' ? '⇥' : char
+        return bad ? (
+          <mark key={i} className="rounded bg-destructive/20 px-0.5 text-destructive not-italic">
+            {display}
+          </mark>
+        ) : (
+          <span key={i}>{char}</span>
+        )
+      })}
+    </span>
+  )
+}
+
 const STATUS_CONFIG = {
   pending: {label: 'Очікує', className: 'bg-muted text-muted-foreground'},
   processing: {label: 'Обробка', className: 'bg-primary/15 text-primary'},
@@ -65,7 +87,6 @@ export default function AudioItemsList({
           const status = getGroupStatus(groupItems)
           const isActive = groupItems.some((i) => i.id === activeAudioId)
           const playableItem = groupItems.find((i) => i.audioUrl)
-          const fileNames = groupItems.map((i) => i.fileName).join(', ')
           const {label, className} = STATUS_CONFIG[status]
 
           return (
@@ -78,11 +99,13 @@ export default function AudioItemsList({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div
-                    className="mb-0.5 truncate text-sm font-medium"
-                    title={fileNames}
-                  >
-                    {fileNames}
+                  <div className="mb-0.5 text-sm font-medium">
+                    {groupItems.map((item, i) => (
+                      <span key={item.id}>
+                        {i > 0 && ', '}
+                        <FileNameDisplay name={item.fileName} />
+                      </span>
+                    ))}
                   </div>
                   <Textarea
                     value={groupItems[0].text}
