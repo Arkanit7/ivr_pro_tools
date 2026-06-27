@@ -6,7 +6,7 @@ export default function FileUpload({
   file,
   onFileChange,
   defaultText = 'Оберіть IVR скрипт (Excel)',
-  instructionText = 'Стовп A: Назва файлу | Стовп B: Текст скрипту',
+  instructionText = 'Стовпець A: Назва промпта | Стовпець B: Текст промпта',
 }) {
   const id = useId()
   const [isDragging, setIsDragging] = useState(false)
@@ -53,8 +53,12 @@ export default function FileUpload({
             isDragging ? 'text-primary' : 'group-hover:text-accent-foreground',
           )}
         />
-        <span className="text-sm font-semibold">{file ? file.name : defaultText}</span>
-        <span className="mt-1 text-xs italic text-muted-foreground">{instructionText}</span>
+        <span className="text-sm font-semibold">
+          {file ? file.name : defaultText}
+        </span>
+        <span className="mt-1 text-center text-xs text-muted-foreground italic">
+          {instructionText}
+        </span>
       </label>
     </div>
   )
