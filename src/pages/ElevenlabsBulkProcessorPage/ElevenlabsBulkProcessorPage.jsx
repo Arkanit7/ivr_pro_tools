@@ -357,7 +357,7 @@ export default function ElevenlabsBulkProcessorPage() {
         </div>
 
         {/* ── Right settings sidebar ──────────────────────────────── */}
-        <aside className="sticky top-0 h-screen w-108 shrink-0 flex flex-col gap-4 overflow-y-auto border-l border-border bg-background p-3 pb-28">
+        <aside className="scrollbar-thin sticky top-0 h-screen w-108 shrink-0 flex flex-col gap-4 overflow-y-auto border-l border-border bg-background p-3 pb-28">
           <div className="pl-2 py-1">
             <p className="text-lg font-semibold whitespace-nowrap">Налаштування</p>
           </div>
