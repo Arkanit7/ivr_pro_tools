@@ -49,7 +49,6 @@ export default function AudioItemsList({
   activeAudioId,
   isPlaying,
   onPlay,
-  onPlayAll,
   onRegenerate,
   onDownloadGroup,
   onDownloadAll,
@@ -68,16 +67,10 @@ export default function AudioItemsList({
             Аудіофайли ({items.length})
           </h3>
           {completedItems.length > 0 && (
-            <div className="flex gap-2">
-              <Button onClick={onPlayAll} variant="outline" size="sm">
-                <Play className="mr-1.5 h-3.5 w-3.5" />
-                Відтворити все
-              </Button>
-              <Button onClick={onDownloadAll} variant="outline" size="sm">
-                <Download className="mr-1.5 h-3.5 w-3.5" />
-                Завантажити все ({completedItems.length})
-              </Button>
-            </div>
+            <Button onClick={onDownloadAll} variant="outline" size="sm">
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Завантажити все ({completedItems.length})
+            </Button>
           )}
         </div>
       )}

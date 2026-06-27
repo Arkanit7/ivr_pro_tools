@@ -8,6 +8,7 @@ import {ElevenLabsClient} from '@elevenlabs/elevenlabs-js/wrapper'
 import {Button} from '@/components/ui/button'
 import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {Label} from '@/components/ui/label'
+import {Switch} from '@/components/ui/switch'
 import {TooltipProvider} from '@/components/ui/tooltip'
 import {
   Select,
@@ -97,6 +98,7 @@ export default function ElevenlabsBulkProcessorPage() {
   )
   const [activeAudioId, setActiveAudioId] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [autoplay, setAutoplay] = useLocalStorage('bulk_autoplay', true)
   const playQueueRef = useRef([])
   const playerRef = useRef(null)
   const prevFormatRef = useRef(saveFormat)
@@ -276,12 +278,30 @@ export default function ElevenlabsBulkProcessorPage() {
 
   const handleAudioEnded = () => {
     const queue = playQueueRef.current
-    if (!queue.length) return
-    const nextIndex = queue.indexOf(activeAudioId) + 1
-    if (nextIndex < queue.length) {
-      setActiveAudioId(queue[nextIndex])
-    } else {
-      playQueueRef.current = []
+    if (queue.length) {
+      const nextIndex = queue.indexOf(activeAudioId) + 1
+      if (nextIndex < queue.length) {
+        setActiveAudioId(queue[nextIndex])
+      } else {
+        playQueueRef.current = []
+        setActiveAudioId(null)
+      }
+      return
+    }
+
+    if (autoplay) {
+      const currentGroupIndex = audioItemGroups.findIndex((ids) =>
+        ids.includes(activeAudioId),
+      )
+      for (let i = currentGroupIndex + 1; i < audioItemGroups.length; i++) {
+        const item = audioItems.find(
+          (it) => it.id === audioItemGroups[i][0] && it.audioUrl,
+        )
+        if (item) {
+          setActiveAudioId(item.id)
+          return
+        }
+      }
       setActiveAudioId(null)
     }
   }
@@ -476,6 +496,16 @@ export default function ElevenlabsBulkProcessorPage() {
               onPlayStateChange={setIsPlaying}
               className="flex-1"
             />
+            <div className="flex shrink-0 items-center gap-2">
+              <Switch
+                id="autoplay-switch"
+                checked={autoplay}
+                onCheckedChange={setAutoplay}
+              />
+              <Label htmlFor="autoplay-switch" className="cursor-pointer whitespace-nowrap text-sm">
+                Авто
+              </Label>
+            </div>
           </div>
         </div>
       )}
