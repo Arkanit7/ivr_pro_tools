@@ -28,22 +28,29 @@ function SettingsModal({onClose}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200"
+        className="absolute inset-0 animate-in bg-black/30 backdrop-blur-sm duration-200 fade-in"
         onClick={onClose}
       />
 
-      <div className="relative z-10 w-80 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-lg animate-in px-4 duration-200 zoom-in-95 fade-in">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-base font-semibold text-card-foreground">Налаштування</h2>
-            <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Закрити">
+            <h2 className="text-base font-semibold text-card-foreground">
+              Налаштування
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label="Закрити"
+            >
               <X />
             </Button>
           </div>
 
           <div className="space-y-4 px-5 py-4">
             <div>
-              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
                 Тема оформлення
               </p>
               <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
@@ -52,7 +59,7 @@ function SettingsModal({onClose}) {
                     key={value}
                     onClick={() => setTheme(value)}
                     className={cn(
-                      'flex flex-col items-center gap-1.5 select-none rounded-lg px-2 py-3 text-xs font-medium transition-all duration-200',
+                      'flex flex-col items-center gap-1.5 rounded-lg px-2 py-3 text-xs font-medium transition-all duration-200 select-none',
                       theme === value
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground',
@@ -66,7 +73,7 @@ function SettingsModal({onClose}) {
             </div>
 
             <div>
-              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
                 Акцентний колір
               </p>
               <div className="flex flex-wrap gap-2">

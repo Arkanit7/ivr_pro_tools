@@ -3,13 +3,16 @@ import {useLocalStorage} from '@/hooks/useLocalStorage'
 
 export const ACCENT_COLORS = [
   {id: 'default', label: 'За замовчуванням', preview: 'oklch(0.205 0 0)'},
-  {id: 'blue',    label: 'Синій',             preview: 'oklch(0.46 0.22 250)'},
-  {id: 'purple',  label: 'Фіолетовий',        preview: 'oklch(0.46 0.22 300)'},
-  {id: 'teal',    label: 'Бірюзовий',         preview: 'oklch(0.46 0.18 195)'},
-  {id: 'green',   label: 'Зелений',           preview: 'hsl(135 100% 50%)'},
-  {id: 'orange',  label: 'Помаранчевий',      preview: 'oklch(0.56 0.2 50)'},
-  {id: 'yellow',  label: 'Жовтий',            preview: 'hsl(48 100% 46%)'},
-  {id: 'red',     label: 'Червоний',          preview: 'oklch(0.5 0.22 25)'},
+  {id: 'blue',    label: 'Синій',            preview: 'oklch(0.46 0.22 250)'},
+  {id: 'indigo',  label: 'Індиго',           preview: 'oklch(0.46 0.25 264)'},
+  {id: 'purple',  label: 'Фіолетовий',       preview: 'oklch(0.46 0.22 300)'},
+  {id: 'pink',    label: 'Рожевий',          preview: 'hsl(330 98% 41%)'},
+  {id: 'red',     label: 'Червоний',         preview: 'oklch(0.5 0.22 25)'},
+  {id: 'orange',  label: 'Помаранчевий',     preview: 'oklch(0.56 0.2 50)'},
+  {id: 'yellow',  label: 'Жовтий',           preview: 'hsl(48 100% 46%)'},
+  {id: 'green',   label: 'Зелений',          preview: 'hsl(135 100% 50%)'},
+  {id: 'teal',    label: 'Бірюзовий',        preview: 'oklch(0.46 0.18 195)'},
+  {id: 'cyan',    label: 'Блакитний',        preview: 'oklch(0.50 0.17 210)'},
 ]
 
 const AccentContext = createContext(null)
