@@ -1,7 +1,21 @@
-import {useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle} from 'react'
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from 'react'
 import {Play, Pause, Volume2, VolumeX, Download} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import {saveAs} from 'file-saver'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 function fmt(s) {
   if (!isFinite(s) || s < 0) return '0:00'
@@ -23,8 +37,12 @@ function TrackBar({value, onChange, className}) {
 
   // Attach global move/up listeners once; use refs so they stay stable.
   useEffect(() => {
-    const onMove = (e) => { if (dragging.current) onChangeRef.current(getRatio(e.clientX)) }
-    const onUp = () => { dragging.current = false }
+    const onMove = (e) => {
+      if (dragging.current) onChangeRef.current(getRatio(e.clientX))
+    }
+    const onUp = () => {
+      dragging.current = false
+    }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
     return () => {
@@ -36,7 +54,10 @@ function TrackBar({value, onChange, className}) {
   return (
     <div
       ref={barRef}
-      className={cn('group relative flex h-5 cursor-pointer items-center', className)}
+      className={cn(
+        'group relative flex h-5 cursor-pointer items-center',
+        className,
+      )}
       onMouseDown={(e) => {
         dragging.current = true
         onChangeRef.current(getRatio(e.clientX))
@@ -44,7 +65,7 @@ function TrackBar({value, onChange, className}) {
       }}
     >
       {/* Track track — expands slightly on hover */}
-      <div className="relative h-1 w-full overflow-hidden rounded-full bg-border transition-[height] duration-100 group-hover:h-[5px]">
+      <div className="relative h-1 w-full overflow-hidden rounded-full bg-border transition-[height] duration-100 group-hover:h-1.25">
         <div
           className="absolute inset-y-0 left-0 rounded-full bg-foreground/75"
           style={{width: `${value * 100}%`}}
@@ -60,7 +81,16 @@ function TrackBar({value, onChange, className}) {
 }
 
 const AudioPlayer = forwardRef(function AudioPlayer(
-  {src, downloadBlob, downloadName, getDownloadName, onEnded, onPlayStateChange, autoPlay = false, className},
+  {
+    src,
+    downloadBlob,
+    downloadName,
+    getDownloadName,
+    onEnded,
+    onPlayStateChange,
+    autoPlay = false,
+    className,
+  },
   ref,
 ) {
   const audioRef = useRef(null)
@@ -78,6 +108,8 @@ const AudioPlayer = forwardRef(function AudioPlayer(
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
   const [muted, setMuted] = useState(false)
+  const [playbackRate, setPlaybackRate] = useState(1)
+  const playbackRateRef = useRef(1)
 
   // Expose imperative play/pause for parent pages that need per-item button control
   useImperativeHandle(ref, () => ({
@@ -93,6 +125,7 @@ const AudioPlayer = forwardRef(function AudioPlayer(
     setDuration(0)
     setIsPlaying(false)
     onPlayStateChangeRef.current?.(false)
+    audio.playbackRate = playbackRateRef.current
     if (src && autoPlayRef.current) {
       audio.play().catch(() => {})
     }
@@ -103,10 +136,17 @@ const AudioPlayer = forwardRef(function AudioPlayer(
     const audio = audioRef.current
     if (!audio) return
 
-    const onPlay = () => { setIsPlaying(true); onPlayStateChangeRef.current?.(true) }
-    const onPause = () => { setIsPlaying(false); onPlayStateChangeRef.current?.(false) }
+    const onPlay = () => {
+      setIsPlaying(true)
+      onPlayStateChangeRef.current?.(true)
+    }
+    const onPause = () => {
+      setIsPlaying(false)
+      onPlayStateChangeRef.current?.(false)
+    }
     const onTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const onDurationChange = () => setDuration(isFinite(audio.duration) ? audio.duration : 0)
+    const onDurationChange = () =>
+      setDuration(isFinite(audio.duration) ? audio.duration : 0)
     const onEnd = () => {
       setIsPlaying(false)
       setCurrentTime(0)
@@ -135,17 +175,23 @@ const AudioPlayer = forwardRef(function AudioPlayer(
     else audio.pause()
   }
 
-  const handleSeek = useCallback((ratio) => {
-    const audio = audioRef.current
-    if (!audio || !duration) return
-    const t = ratio * duration
-    audio.currentTime = t
-    setCurrentTime(t)
-  }, [duration])
+  const handleSeek = useCallback(
+    (ratio) => {
+      const audio = audioRef.current
+      if (!audio || !duration) return
+      const t = ratio * duration
+      audio.currentTime = t
+      setCurrentTime(t)
+    },
+    [duration],
+  )
 
   const handleVolume = useCallback((v) => {
     const audio = audioRef.current
-    if (audio) { audio.volume = v; audio.muted = false }
+    if (audio) {
+      audio.volume = v
+      audio.muted = false
+    }
     setVolume(v)
     setMuted(false)
   }, [])
@@ -156,6 +202,12 @@ const AudioPlayer = forwardRef(function AudioPlayer(
     const next = !muted
     audio.muted = next
     setMuted(next)
+  }
+
+  const handlePlaybackRate = (rate) => {
+    playbackRateRef.current = rate
+    setPlaybackRate(rate)
+    if (audioRef.current) audioRef.current.playbackRate = rate
   }
 
   const handleDownload = () => {
@@ -183,22 +235,27 @@ const AudioPlayer = forwardRef(function AudioPlayer(
         onClick={handlePlayPause}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background shadow-sm transition-transform hover:scale-105 active:scale-95"
       >
-        {isPlaying
-          ? <Pause className="h-3.5 w-3.5 fill-current" />
-          : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
-        }
+        {isPlaying ? (
+          <Pause className="h-3.5 w-3.5 fill-current" />
+        ) : (
+          <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
+        )}
       </button>
 
       {/* Current time */}
-      <span className="w-9 shrink-0 text-right tabular-nums text-xs text-muted-foreground">
+      <span className="w-9 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
         {fmt(currentTime)}
       </span>
 
       {/* Progress scrubber */}
-      <TrackBar value={progress} onChange={handleSeek} className="min-w-0 flex-1" />
+      <TrackBar
+        value={progress}
+        onChange={handleSeek}
+        className="min-w-0 flex-1"
+      />
 
       {/* Total time */}
-      <span className="w-9 shrink-0 tabular-nums text-xs text-muted-foreground">
+      <span className="w-9 shrink-0 text-xs text-muted-foreground tabular-nums">
         {fmt(duration)}
       </span>
 
@@ -209,14 +266,36 @@ const AudioPlayer = forwardRef(function AudioPlayer(
         onClick={handleMute}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
       >
-        {muted || volume === 0
-          ? <VolumeX className="h-4 w-4" />
-          : <Volume2 className="h-4 w-4" />
-        }
+        {muted || volume === 0 ? (
+          <VolumeX className="h-4 w-4" />
+        ) : (
+          <Volume2 className="h-4 w-4" />
+        )}
       </button>
 
       {/* Volume scrubber */}
-      <TrackBar value={muted ? 0 : volume} onChange={handleVolume} className="w-16 shrink-0" />
+      <TrackBar
+        value={muted ? 0 : volume}
+        onChange={handleVolume}
+        className="w-16 shrink-0"
+      />
+
+      {/* Playback speed */}
+      <Select
+        value={String(playbackRate)}
+        onValueChange={(v) => handlePlaybackRate(Number(v))}
+      >
+        <SelectTrigger className="h-7 w-14 shrink-0 border border-border bg-transparent px-1 text-xs text-muted-foreground shadow-none">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {[0.75, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2].map((r) => (
+            <SelectItem key={r} value={String(r)}>
+              {r}×
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {/* Download */}
       {downloadBlob && (downloadName || getDownloadName) && (
