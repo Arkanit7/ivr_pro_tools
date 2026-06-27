@@ -89,6 +89,7 @@ function SettingsModal({onClose}) {
                 <label
                   title="Власний колір"
                   style={{backgroundColor: customColor}}
+                  onClick={() => setAccent('custom')}
                   className={cn(
                     'relative h-7 w-7 cursor-pointer overflow-hidden rounded-full transition-all',
                     accent === 'custom'
@@ -99,10 +100,7 @@ function SettingsModal({onClose}) {
                   <input
                     type="color"
                     value={customColor}
-                    onChange={(e) => {
-                      setCustomColor(e.target.value)
-                      setAccent('custom')
-                    }}
+                    onChange={(e) => setCustomColor(e.target.value)}
                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                   />
                 </label>

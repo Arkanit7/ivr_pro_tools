@@ -20,13 +20,23 @@ export function AccentProvider({children}) {
 
   useEffect(() => {
     const root = document.documentElement
+    let styleEl = document.getElementById('__accent_custom__')
+
     if (accent === 'custom') {
       delete root.dataset.accent
-      root.style.setProperty('--primary', customColor)
-      root.style.setProperty('--ring', customColor)
+      if (!styleEl) {
+        styleEl = document.createElement('style')
+        styleEl.id = '__accent_custom__'
+        document.head.appendChild(styleEl)
+      }
+      // :root.dark (specificity 0,2,0) beats both :root and .dark (0,1,0 each),
+      // so the custom colour wins in both light and dark modes.
+      styleEl.textContent = [
+        `:root { --primary: ${customColor}; --ring: ${customColor}; }`,
+        `:root.dark { --primary: ${customColor}; --ring: ${customColor}; }`,
+      ].join('\n')
     } else {
-      root.style.removeProperty('--primary')
-      root.style.removeProperty('--ring')
+      if (styleEl) styleEl.textContent = ''
       if (accent === 'default') {
         delete root.dataset.accent
       } else {
