@@ -45,7 +45,7 @@ export default function ExcelNormalizerPage() {
 
   return (
     <PageShell>
-      <Card className="w-full max-w-md border-none shadow-xl">
+      <Card className="w-full max-w-md border-none shadow-xl bg-transparent">
         <CardHeader className="border-b pb-6 text-center">
           <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
             <FileSpreadsheet className="h-8 w-8 text-primary" />

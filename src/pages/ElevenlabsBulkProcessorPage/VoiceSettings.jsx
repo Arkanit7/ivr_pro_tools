@@ -4,7 +4,7 @@ import {Tooltip, TooltipContent, TooltipTrigger} from '@/components/ui/tooltip'
 
 function SliderField({id, label, tooltip, value, displayValue, onValueChange, min, max, step}) {
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+    <div className="flex flex-col gap-3 p-4">
       <div className="flex items-center justify-between gap-4">
         <Tooltip>
           <TooltipTrigger asChild>

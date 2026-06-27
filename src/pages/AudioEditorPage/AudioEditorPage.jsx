@@ -412,7 +412,7 @@ export default function AudioEditorPage() {
     >
       <Card
         className={cn(
-          'flex flex-col border-none shadow-xl transition-shadow duration-150',
+          'flex flex-col border-none shadow-xl bg-transparent transition-shadow duration-150',
           isDraggingOver && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
         )}
       >

@@ -62,7 +62,7 @@ function pcm16ToWavBlob(pcm, sampleRate) {
 
 function SliderField({label, tooltip, value, onValueChange, min, max, step, format}) {
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+    <div className="flex flex-col gap-3 p-4">
       <div className="flex items-center justify-between gap-4">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -254,7 +254,7 @@ export default function TTSPage() {
         {/* ── Center content column ───────────────────────────────── */}
         <div className="flex-1 min-w-0 flex justify-center py-8 px-6 pb-28">
           <div className="w-full max-w-2xl">
-            <Card className="border-none shadow-xl">
+            <Card className="border-none shadow-xl bg-transparent">
               <CardHeader className="border-b pb-6 text-center">
                 <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
                   <Mic2 className="h-8 w-8 text-primary" />
@@ -372,7 +372,7 @@ export default function TTSPage() {
           </div>
 
           {/* Model */}
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+          <div className="flex flex-col gap-3 p-4">
             <Label>Модель</Label>
             <Select value={model} onValueChange={setModel}>
               <SelectTrigger>
@@ -430,7 +430,7 @@ export default function TTSPage() {
           />
 
           {/* Speaker boost */}
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+          <div className="flex flex-col gap-3 p-4">
             <div className="flex items-center justify-between">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -454,7 +454,7 @@ export default function TTSPage() {
           </div>
 
           {/* Text normalization */}
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+          <div className="flex flex-col gap-3 p-4">
             <div className="flex items-center justify-between gap-4">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -481,7 +481,7 @@ export default function TTSPage() {
           </div>
 
           {/* Save format */}
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+          <div className="flex flex-col gap-3 p-4">
             <Label>Зберегти як</Label>
             <Select value={saveFormat} onValueChange={setSaveFormat}>
               <SelectTrigger>
