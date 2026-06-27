@@ -196,7 +196,10 @@ export default function TTSPage() {
   }
 
   const fileNameInvalid = fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
-  const downloadName = (fileName.trim() || 'output') + (saveFormat === 'alw' ? '.alw' : '.wav')
+  const ext = saveFormat === 'alw' ? '.alw' : '.wav'
+  const downloadName = (fileName.trim() || 'IVR_Pro_Tools') + ext
+  const getDownloadName = () =>
+    (fileName.trim() || 'IVR_Pro_Tools_' + new Date().toISOString().slice(0, 19).replace(/:/g, '_')) + ext
   const downloadBlob = useMemo(
     () => (rawBytes ? new Blob([rawBytes], {type: 'application/octet-stream'}) : null),
     [rawBytes],
@@ -207,7 +210,7 @@ export default function TTSPage() {
     const url = URL.createObjectURL(downloadBlob)
     const a = document.createElement('a')
     a.href = url
-    a.download = downloadName
+    a.download = getDownloadName()
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -423,6 +426,7 @@ export default function TTSPage() {
               src={audioUrl}
               downloadBlob={downloadBlob}
               downloadName={downloadName}
+              getDownloadName={getDownloadName}
               autoPlay
               className="flex-1"
             />

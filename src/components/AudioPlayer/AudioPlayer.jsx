@@ -60,7 +60,7 @@ function TrackBar({value, onChange, className}) {
 }
 
 const AudioPlayer = forwardRef(function AudioPlayer(
-  {src, downloadBlob, downloadName, onEnded, onPlayStateChange, autoPlay = false, className},
+  {src, downloadBlob, downloadName, getDownloadName, onEnded, onPlayStateChange, autoPlay = false, className},
   ref,
 ) {
   const audioRef = useRef(null)
@@ -159,7 +159,8 @@ const AudioPlayer = forwardRef(function AudioPlayer(
   }
 
   const handleDownload = () => {
-    if (downloadBlob && downloadName) saveAs(downloadBlob, downloadName)
+    const name = getDownloadName ? getDownloadName() : downloadName
+    if (downloadBlob && name) saveAs(downloadBlob, name)
   }
 
   const progress = duration > 0 ? Math.min(currentTime / duration, 1) : 0
@@ -218,7 +219,7 @@ const AudioPlayer = forwardRef(function AudioPlayer(
       <TrackBar value={muted ? 0 : volume} onChange={handleVolume} className="w-16 shrink-0" />
 
       {/* Download */}
-      {downloadBlob && downloadName && (
+      {downloadBlob && (downloadName || getDownloadName) && (
         <button
           type="button"
           aria-label={`Завантажити ${downloadName}`}
