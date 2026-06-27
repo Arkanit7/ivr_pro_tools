@@ -284,7 +284,6 @@ export default function ElevenlabsBulkProcessorPage() {
         setActiveAudioId(queue[nextIndex])
       } else {
         playQueueRef.current = []
-        setActiveAudioId(null)
       }
       return
     }
@@ -302,7 +301,6 @@ export default function ElevenlabsBulkProcessorPage() {
           return
         }
       }
-      setActiveAudioId(null)
     }
   }
 
