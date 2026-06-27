@@ -6,7 +6,6 @@ import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {decodeAlaw} from '@/pages/AudioEditorPage/alawDecoder'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 import {Button} from '@/components/ui/button'
-import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
 import {Input} from '@/components/ui/input'
 import {Label} from '@/components/ui/label'
@@ -192,7 +191,6 @@ export default function TTSPage() {
     setStability(0.75)
     setSimilarityBoost(1.0)
     setStyle(0)
-    setSpeakerBoost(true)
     setSpeed(1.0)
     setTextNormalization('on')
   }
@@ -220,116 +218,135 @@ export default function TTSPage() {
       <div className="flex -my-8 min-h-screen">
 
         {/* ── Center content column ───────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex justify-center py-8 px-6 pb-28">
-          <div className="w-full max-w-2xl">
-            <Card className="border-none shadow-xl bg-transparent">
-              <CardHeader className="border-b pb-6 text-center">
-                <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
-                  <Mic2 className="h-8 w-8 text-primary" />
-                  Синтез мовлення
-                </CardTitle>
-              </CardHeader>
+        <div className="flex-1 min-w-0 flex justify-center py-10 px-6 pb-28">
+          <div className="w-full max-w-2xl space-y-6">
 
-              <CardContent className="mt-4 space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Назва файлу
-                  </Label>
-                  <Input
-                    value={fileName}
-                    onChange={(e) => setFileName(e.target.value)}
-                    placeholder="output"
-                    className={cn(
-                      'h-11 text-lg font-bold',
-                      fileNameInvalid && 'border-destructive focus-visible:ring-destructive',
-                    )}
-                  />
-                  {fileNameInvalid && (
-                    <div className="space-y-0.5">
-                      <p className="text-xs text-destructive">
-                        Тільки латинські символи, цифри, <code>_</code> та <code>-</code>. Недопустимі символи:
-                      </p>
-                      <p className="font-mono text-sm leading-relaxed">
-                        {[...fileName].map((char, i) => {
-                          const bad = !VALID_FILENAME_CHAR.test(char)
-                          const display = char === ' ' ? '␣' : char === '\t' ? '⇥' : char === '\n' ? '↵' : char
-                          return bad ? (
-                            <mark key={i} className="rounded bg-destructive/20 px-0.5 text-destructive not-italic">
-                              {display}
-                            </mark>
-                          ) : (
-                            <span key={i}>{display}</span>
-                          )
-                        })}
-                      </p>
-                    </div>
-                  )}
-                </div>
+            {/* Heading */}
+            <div className="flex items-center gap-4 pb-2">
+              <Mic2 className="h-10 w-10 text-primary shrink-0" />
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Синтез мовлення</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Генерація аудіо через ElevenLabs TTS</p>
+              </div>
+            </div>
 
-                <div className="space-y-1">
-                  <Label>Текст до (контекст — не озвучується)</Label>
-                  <Textarea
-                    value={textBefore}
-                    onChange={(e) => setTextBefore(e.target.value)}
-                    placeholder="Контекст перед основним текстом (впливає на просодію)"
-                    rows={2}
-                    className="resize-y min-h-16"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label>Текст для озвучення</Label>
-                  <Textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Введіть текст для синтезу…"
-                    rows={10}
-                    className="resize-y min-h-52"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label>Текст після (контекст — не озвучується)</Label>
-                  <Textarea
-                    value={textAfter}
-                    onChange={(e) => setTextAfter(e.target.value)}
-                    placeholder="Контекст після основного тексту (впливає на просодію)"
-                    rows={2}
-                    className="resize-y min-h-16"
-                  />
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    if (textBefore) setTextBefore(normalizeForTTS(textBefore))
-                    if (text) setText(normalizeForTTS(text))
-                    if (textAfter) setTextAfter(normalizeForTTS(textAfter))
-                  }}
-                >
-                  <Wand2 className="mr-2 h-3.5 w-3.5" />
-                  Нормалізувати текст
-                </Button>
-
-                <div className="flex gap-2">
-                  <Button onClick={handleGenerate} disabled={isGenerating || fileNameInvalid} className="flex-1">
-                    {isGenerating ? 'Генерація…' : 'Генерувати'}
-                  </Button>
-                  <Button variant="outline" onClick={handleDownload} disabled={!downloadBlob}>
-                    Завантажити
-                  </Button>
-                </div>
-
-                {statusMsg && (
-                  <p className={`text-sm ${isError ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {statusMsg}
-                  </p>
+            {/* File name */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Назва файлу
+              </Label>
+              <Input
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                placeholder="output"
+                className={cn(
+                  'h-11 text-base font-semibold',
+                  fileNameInvalid && 'border-destructive focus-visible:ring-destructive',
                 )}
-              </CardContent>
-            </Card>
+              />
+              {fileNameInvalid && (
+                <div className="space-y-0.5">
+                  <p className="text-xs text-destructive">
+                    Тільки латинські символи, цифри, <code>_</code> та <code>-</code>. Недопустимі символи:
+                  </p>
+                  <p className="font-mono text-sm leading-relaxed">
+                    {[...fileName].map((char, i) => {
+                      const bad = !VALID_FILENAME_CHAR.test(char)
+                      const display = char === ' ' ? '␣' : char === '\t' ? '⇥' : char === '\n' ? '↵' : char
+                      return bad ? (
+                        <mark key={i} className="rounded bg-destructive/20 px-0.5 text-destructive not-italic">
+                          {display}
+                        </mark>
+                      ) : (
+                        <span key={i}>{display}</span>
+                      )
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Context before */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Контекст до{' '}
+                <span className="normal-case font-normal opacity-60">— не озвучується</span>
+              </Label>
+              <Textarea
+                value={textBefore}
+                onChange={(e) => setTextBefore(e.target.value)}
+                placeholder="Текст перед основним (впливає на просодію)"
+                rows={2}
+                className="resize-y min-h-16"
+              />
+            </div>
+
+            {/* Main text */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Текст для озвучення
+              </Label>
+              <Textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Введіть текст для синтезу…"
+                rows={12}
+                className="resize-y min-h-64"
+              />
+            </div>
+
+            {/* Context after */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Контекст після{' '}
+                <span className="normal-case font-normal opacity-60">— не озвучується</span>
+              </Label>
+              <Textarea
+                value={textAfter}
+                onChange={(e) => setTextAfter(e.target.value)}
+                placeholder="Текст після основного (впливає на просодію)"
+                rows={2}
+                className="resize-y min-h-16"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground"
+                onClick={() => {
+                  if (textBefore) setTextBefore(normalizeForTTS(textBefore))
+                  if (text) setText(normalizeForTTS(text))
+                  if (textAfter) setTextAfter(normalizeForTTS(textAfter))
+                }}
+              >
+                <Wand2 className="mr-2 h-3.5 w-3.5" />
+                Нормалізувати текст
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || fileNameInvalid}
+                  className="flex-1 h-12 text-base"
+                >
+                  {isGenerating ? 'Генерація…' : 'Генерувати'}
+                </Button>
+                <Button variant="outline" onClick={handleDownload} disabled={!downloadBlob} className="h-12 px-6">
+                  Завантажити
+                </Button>
+              </div>
+
+              {statusMsg && (
+                <p className={cn('text-sm text-center', isError ? 'text-destructive' : 'text-muted-foreground')}>
+                  {statusMsg}
+                </p>
+              )}
+            </div>
+
           </div>
         </div>
 
