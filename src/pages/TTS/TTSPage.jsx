@@ -5,7 +5,6 @@ import {cn} from '@/lib/utils'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {decodeAlaw} from '@/pages/AudioEditorPage/alawDecoder'
 import normalizeForTTS from '@/lib/normalizeForTTS'
-import {PageShell} from '@/components/PageShell'
 import {Button} from '@/components/ui/button'
 import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {Textarea} from '@/components/ui/textarea'
@@ -220,6 +219,16 @@ export default function TTSPage() {
     }
   }
 
+  const resetToDefaults = () => {
+    setModel('eleven_multilingual_v2')
+    setStability(0.75)
+    setSimilarityBoost(1.0)
+    setStyle(0)
+    setSpeakerBoost(true)
+    setSpeed(1.0)
+    setTextNormalization('on')
+  }
+
   const fileNameInvalid = fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
   const downloadName = (fileName.trim() || 'output') + (saveFormat === 'alw' ? '.alw' : '.wav')
   const downloadBlob = useMemo(
@@ -227,22 +236,33 @@ export default function TTSPage() {
     [rawBytes],
   )
 
+  const handleDownload = () => {
+    if (!downloadBlob) return
+    const url = URL.createObjectURL(downloadBlob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = downloadName
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <TooltipProvider>
-      <PageShell className="pb-28 items-start">
-        <Card className="w-full max-w-5xl border-none shadow-xl">
-          <CardHeader className="border-b pb-6 text-center">
-            <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
-              <Mic2 className="h-8 w-8 text-primary" />
-              Синтез мовлення
-            </CardTitle>
-          </CardHeader>
+      {/* -my-8 cancels the py-8 from MainLayout's <main> so the sidebar can be sticky top-0 */}
+      <div className="flex -my-8 min-h-screen">
 
-          <CardContent className="mt-4">
-            <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        {/* ── Center content column ───────────────────────────────── */}
+        <div className="flex-1 min-w-0 flex justify-center py-8 px-6 pb-28">
+          <div className="w-full max-w-2xl">
+            <Card className="border-none shadow-xl">
+              <CardHeader className="border-b pb-6 text-center">
+                <CardTitle className="flex items-center justify-center gap-3 text-2xl font-bold">
+                  <Mic2 className="h-8 w-8 text-primary" />
+                  Синтез мовлення
+                </CardTitle>
+              </CardHeader>
 
-              {/* Left column — text inputs */}
-              <div className="space-y-4">
+              <CardContent className="mt-4 space-y-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Назва файлу
@@ -285,7 +305,7 @@ export default function TTSPage() {
                     onChange={(e) => setTextBefore(e.target.value)}
                     placeholder="Контекст перед основним текстом (впливає на просодію)"
                     rows={2}
-                    className="resize-none"
+                    className="resize-y min-h-16"
                   />
                 </div>
 
@@ -295,8 +315,8 @@ export default function TTSPage() {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Введіть текст для синтезу…"
-                    rows={8}
-                    className="resize-none"
+                    rows={10}
+                    className="resize-y min-h-52"
                   />
                 </div>
 
@@ -307,7 +327,7 @@ export default function TTSPage() {
                     onChange={(e) => setTextAfter(e.target.value)}
                     placeholder="Контекст після основного тексту (впливає на просодію)"
                     rows={2}
-                    className="resize-none"
+                    className="resize-y min-h-16"
                   />
                 </div>
 
@@ -326,146 +346,162 @@ export default function TTSPage() {
                   Нормалізувати текст
                 </Button>
 
-                <div className="space-y-1">
-                  <Label>Зберегти як</Label>
-                  <Select value={saveFormat} onValueChange={setSaveFormat}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SAVE_FORMATS.map((f) => (
-                        <SelectItem key={f.id} value={f.id}>
-                          {f.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex gap-2">
+                  <Button onClick={handleGenerate} disabled={isGenerating || fileNameInvalid} className="flex-1">
+                    {isGenerating ? 'Генерація…' : 'Генерувати'}
+                  </Button>
+                  <Button variant="outline" onClick={handleDownload} disabled={!downloadBlob}>
+                    Завантажити
+                  </Button>
                 </div>
-
-                <Button onClick={handleGenerate} disabled={isGenerating || fileNameInvalid} className="w-full">
-                  {isGenerating ? 'Генерація…' : 'Генерувати'}
-                </Button>
 
                 {statusMsg && (
                   <p className={`text-sm ${isError ? 'text-destructive' : 'text-muted-foreground'}`}>
                     {statusMsg}
                   </p>
                 )}
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-              {/* Right column — voice settings */}
-              <div className="space-y-2">
-                <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-                  <Label>Модель</Label>
-                  <Select value={model} onValueChange={setModel}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODELS.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* ── Right settings sidebar ──────────────────────────────── */}
+        <aside className="sticky top-0 h-screen w-108 shrink-0 flex flex-col gap-4 overflow-y-auto border-l border-border bg-background p-3 pb-28">
+          <div className="pl-2 py-1">
+            <p className="text-lg font-semibold whitespace-nowrap">Налаштування</p>
+          </div>
 
-                <SliderField
-                  label="Швидкість"
-                  tooltip="Контролює швидкість мовлення. Значення нижче 1.0 сповільнюють, вище 1.0 — прискорюють. Екстремальні значення можуть знизити якість генерації."
-                  value={speed}
-                  onValueChange={setSpeed}
-                  min={0.7}
-                  max={1.2}
-                  step={0.01}
-                  format={(v) => v.toFixed(2)}
-                />
-                <SliderField
-                  label="Стабільність"
-                  tooltip="Вища стабільність робить голос консистентнішим між генераціями, але може звучати монотонно. Для довгих текстів рекомендуємо знижувати це значення."
-                  value={stability}
-                  onValueChange={setStability}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  format={(v) => `${(v * 100).toFixed()}%`}
-                />
-                <SliderField
-                  label="Схожість"
-                  tooltip="Висока схожість покращує чіткість голосу та відповідність оригіналу. Дуже високі значення можуть спричинити артефакти."
-                  value={similarityBoost}
-                  onValueChange={setSimilarityBoost}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  format={(v) => `${(v * 100).toFixed()}%`}
-                />
-                <SliderField
-                  label="Стиль"
-                  tooltip="Високі значення підкреслюють стиль мовлення. Можуть спричинити нестабільність генерації. Значення 0.0 — стандартне та значно прискорює генерацію."
-                  value={style}
-                  onValueChange={setStyle}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  format={(v) => `${(v * 100).toFixed()}%`}
-                />
+          {/* Model */}
+          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+            <Label>Модель</Label>
+            <Select value={model} onValueChange={setModel}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODELS.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-                  <div className="flex items-center justify-between">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Label
-                          htmlFor="speakerBoost"
-                          className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2"
-                        >
-                          Підсилення динаміка
-                        </Label>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Підвищує схожість з оригінальним голосом. Рекомендується для більшості випадків.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Switch
-                      id="speakerBoost"
-                      checked={speakerBoost}
-                      onCheckedChange={setSpeakerBoost}
-                    />
-                  </div>
-                </div>
+          <SliderField
+            label="Швидкість"
+            tooltip="Контролює швидкість мовлення. Значення нижче 1.0 сповільнюють, вище 1.0 — прискорюють. Екстремальні значення можуть знизити якість генерації."
+            value={speed}
+            onValueChange={setSpeed}
+            min={0.7}
+            max={1.2}
+            step={0.01}
+            format={(v) => v.toFixed(2)}
+          />
+          <SliderField
+            label="Стабільність"
+            tooltip="Вища стабільність робить голос консистентнішим між генераціями, але може звучати монотонно. Для довгих текстів рекомендуємо знижувати це значення."
+            value={stability}
+            onValueChange={setStability}
+            min={0}
+            max={1}
+            step={0.01}
+            format={(v) => `${(v * 100).toFixed()}%`}
+          />
+          <SliderField
+            label="Схожість"
+            tooltip="Висока схожість покращує чіткість голосу та відповідність оригіналу. Дуже високі значення можуть спричинити артефакти."
+            value={similarityBoost}
+            onValueChange={setSimilarityBoost}
+            min={0}
+            max={1}
+            step={0.01}
+            format={(v) => `${(v * 100).toFixed()}%`}
+          />
+          <SliderField
+            label="Стиль"
+            tooltip="Високі значення підкреслюють стиль мовлення. Можуть спричинити нестабільність генерації. Значення 0.0 — стандартне та значно прискорює генерацію."
+            value={style}
+            onValueChange={setStyle}
+            min={0}
+            max={1}
+            step={0.01}
+            format={(v) => `${(v * 100).toFixed()}%`}
+          />
 
-                <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Label className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2">
-                          Нормалізація тексту
-                        </Label>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Визначає, чи застосовує ElevenLabs нормалізацію тексту. «auto» — автоматично, «on» — завжди, «off» — ніколи.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <span className="text-sm capitalize text-muted-foreground">{textNormalization}</span>
-                  </div>
-                  <Select value={textNormalization} onValueChange={setTextNormalization}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="auto">auto</SelectItem>
-                      <SelectItem value="on">on</SelectItem>
-                      <SelectItem value="off">off</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-              </div>
+          {/* Speaker boost */}
+          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+            <div className="flex items-center justify-between">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Label
+                    htmlFor="speakerBoost"
+                    className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2"
+                  >
+                    Підсилення динаміка
+                  </Label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Підвищує схожість з оригінальним голосом. Рекомендується для більшості випадків.</p>
+                </TooltipContent>
+              </Tooltip>
+              <Switch
+                id="speakerBoost"
+                checked={speakerBoost}
+                onCheckedChange={setSpeakerBoost}
+              />
             </div>
-          </CardContent>
-        </Card>
-      </PageShell>
+          </div>
+
+          {/* Text normalization */}
+          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Label className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2">
+                    Нормалізація тексту
+                  </Label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Визначає, чи застосовує ElevenLabs нормалізацію тексту. «auto» — автоматично, «on» — завжди, «off» — ніколи.</p>
+                </TooltipContent>
+              </Tooltip>
+              <span className="text-sm capitalize text-muted-foreground">{textNormalization}</span>
+            </div>
+            <Select value={textNormalization} onValueChange={setTextNormalization}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">auto</SelectItem>
+                <SelectItem value="on">on</SelectItem>
+                <SelectItem value="off">off</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Save format */}
+          <div className="flex flex-col gap-3 rounded-md border border-border bg-background/80 p-4">
+            <Label>Зберегти як</Label>
+            <Select value={saveFormat} onValueChange={setSaveFormat}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SAVE_FORMATS.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button variant="ghost" onClick={resetToDefaults} className="w-full">
+            Скинути до стандартних
+          </Button>
+        </aside>
+      </div>
 
       {audioUrl && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/50 px-6 py-4 backdrop-blur-xl">
