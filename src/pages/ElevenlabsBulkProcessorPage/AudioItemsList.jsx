@@ -1,6 +1,7 @@
+import {useState} from 'react'
 import {Button} from '@/components/ui/button'
 import {Textarea} from '@/components/ui/textarea'
-import {Play, Pause, RotateCcw, Download, Loader2, Wand2} from 'lucide-react'
+import {Play, Pause, RotateCcw, Download, Loader2, Wand2, ChevronDown} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 
@@ -57,7 +58,16 @@ export default function AudioItemsList({
   onDownloadGroup,
   onDownloadAll,
   onUpdateText,
+  onUpdateContext,
 }) {
+  const [expandedContext, setExpandedContext] = useState(new Set())
+  const toggleContext = (id) =>
+    setExpandedContext((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+
   const completedItems = items.filter((item) => item.status === 'complete')
   const resolvedGroups = groups.map((ids) =>
     ids.map((id) => items.find((i) => i.id === id)).filter(Boolean),
@@ -76,8 +86,12 @@ export default function AudioItemsList({
               size="sm"
               onClick={() =>
                 resolvedGroups.forEach((groupItems) => {
-                  const normalized = normalizeForTTS(groupItems[0].text)
-                  groupItems.forEach((i) => onUpdateText(i.id, normalized))
+                  const item = groupItems[0]
+                  groupItems.forEach((i) => {
+                    onUpdateText(i.id, normalizeForTTS(item.text))
+                    if (item.textBefore) onUpdateContext(i.id, 'textBefore', normalizeForTTS(item.textBefore))
+                    if (item.textAfter) onUpdateContext(i.id, 'textAfter', normalizeForTTS(item.textAfter))
+                  })
                 })
               }
             >
@@ -99,7 +113,10 @@ export default function AudioItemsList({
           const status = getGroupStatus(groupItems)
           const isActive = groupItems.some((i) => i.id === activeAudioId)
           const playableItem = groupItems.find((i) => i.audioUrl)
-          const {label, className} = STATUS_CONFIG[status]
+          const dirty = groupItems[0].dirty && status === 'complete'
+          const {label, className} = dirty
+            ? {label: 'Є зміни', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}
+            : STATUS_CONFIG[status]
 
           return (
             <div
@@ -112,15 +129,44 @@ export default function AudioItemsList({
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-0.5 text-sm font-medium">
-                    {groupItems.map((item, i) => (
-                      <span key={item.id}>
-                        {i > 0 && ', '}
-                        <FileNameDisplay name={item.fileName} />
-                      </span>
-                    ))}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium">
+                      {groupItems.map((item, i) => (
+                        <span key={item.id}>
+                          {i > 0 && ', '}
+                          <FileNameDisplay name={item.fileName} />
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => toggleContext(groupItems[0].id)}
+                      className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          'h-3.5 w-3.5 transition-transform',
+                          expandedContext.has(groupItems[0].id) && 'rotate-180',
+                        )}
+                      />
+                      Контекст
+                    </button>
                   </div>
+
+                  {expandedContext.has(groupItems[0].id) && (
+                    <Textarea
+                      value={groupItems[0].textBefore ?? ''}
+                      onChange={(e) =>
+                        groupItems.forEach((i) =>
+                          onUpdateContext(i.id, 'textBefore', e.target.value),
+                        )
+                      }
+                      rows={1}
+                      className="min-h-9 resize-y text-sm text-muted-foreground"
+                      placeholder="Контекст до — не озвучується"
+                    />
+                  )}
+
                   <Textarea
                     value={groupItems[0].text}
                     onChange={(e) =>
@@ -131,6 +177,20 @@ export default function AudioItemsList({
                     className="min-h-27 resize-y text-sm"
                     placeholder="Введіть текст для TTS..."
                   />
+
+                  {expandedContext.has(groupItems[0].id) && (
+                    <Textarea
+                      value={groupItems[0].textAfter ?? ''}
+                      onChange={(e) =>
+                        groupItems.forEach((i) =>
+                          onUpdateContext(i.id, 'textAfter', e.target.value),
+                        )
+                      }
+                      rows={1}
+                      className="min-h-9 resize-y text-sm text-muted-foreground"
+                      placeholder="Контекст після — не озвучується"
+                    />
+                  )}
                 </div>
 
                 <div className="flex shrink-0 flex-col items-center gap-1">
@@ -148,8 +208,12 @@ export default function AudioItemsList({
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        const normalized = normalizeForTTS(groupItems[0].text)
-                        groupItems.forEach((i) => onUpdateText(i.id, normalized))
+                        const item = groupItems[0]
+                        groupItems.forEach((i) => {
+                          onUpdateText(i.id, normalizeForTTS(item.text))
+                          if (item.textBefore) onUpdateContext(i.id, 'textBefore', normalizeForTTS(item.textBefore))
+                          if (item.textAfter) onUpdateContext(i.id, 'textAfter', normalizeForTTS(item.textAfter))
+                        })
                       }}
                       disabled={status === 'processing'}
                     >
