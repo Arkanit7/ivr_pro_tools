@@ -3,7 +3,7 @@ import {useLocalStorage} from '@/hooks/useLocalStorage'
 import {Mic2, Wand2} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
-import {decodeAlaw} from '@/pages/AudioEditorPage/alawDecoder'
+import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 import {Button} from '@/components/ui/button'
 import {Textarea} from '@/components/ui/textarea'
@@ -185,9 +185,8 @@ export default function TTSPage() {
 
       let playbackBlob
       if (saveFormat === 'alw') {
-        // Decode raw A-law bytes → PCM16 → in-memory WAV for the <audio> element
-        const pcm = decodeAlaw(new Uint8Array(arrayBuffer))
-        playbackBlob = pcm16ToWavBlob(pcm, 8000)
+        const {pcm, sampleRate: alwRate} = parseAlw(arrayBuffer)
+        playbackBlob = pcm16ToWavBlob(pcm, alwRate)
       } else {
         playbackBlob = new Blob([saved], {type: 'audio/wav'})
       }

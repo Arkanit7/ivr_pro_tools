@@ -23,7 +23,7 @@ import FileUpload from '@/components/FileUpload'
 import GenerateButton from '@/pages/ElevenlabsBulkProcessorPage/GenerateButton'
 import AudioItemsList from '@/pages/ElevenlabsBulkProcessorPage/AudioItemsList'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
-import {decodeAlaw} from '@/pages/AudioEditorPage/alawDecoder'
+import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
@@ -213,8 +213,8 @@ export default function ElevenlabsBulkProcessorPage() {
       let playbackBlob
       if (saveFormat === 'alw') {
         const arrayBuffer = await rawBlob.arrayBuffer()
-        const pcm = decodeAlaw(new Uint8Array(arrayBuffer))
-        playbackBlob = pcm16ToWavBlob(pcm, 8000)
+        const {pcm, sampleRate} = parseAlw(arrayBuffer)
+        playbackBlob = pcm16ToWavBlob(pcm, sampleRate)
       } else {
         playbackBlob = rawBlob
       }
