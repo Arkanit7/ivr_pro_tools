@@ -98,8 +98,18 @@ export function parseWav(arrayBuffer) {
 
 /**
  * Parse a raw A-law file (no WAV header): 8-bit bytes, mono, ALW_SAMPLE_RATE Hz.
+ * If the buffer starts with a RIFF/WAVE header (e.g. ElevenLabs wraps its output
+ * in a WAV container), delegates to parseWav so the correct codec is used.
  */
 export function parseAlw(arrayBuffer) {
+  const view = new DataView(arrayBuffer)
+  if (
+    arrayBuffer.byteLength >= 12 &&
+    view.getUint32(0, false) === 0x52494646 && // 'RIFF'
+    view.getUint32(8, false) === 0x57415645    // 'WAVE'
+  ) {
+    return parseWav(arrayBuffer)
+  }
   return {
     pcm: decodeAlaw(new Uint8Array(arrayBuffer)),
     sampleRate: ALW_SAMPLE_RATE,
@@ -232,6 +242,40 @@ function linearToAlaw(v) {
   else if (abs < 16512) { seg = 6; mantissa = Math.max(0, Math.round((abs - 8448)  / 512))  & 0x0f }
   else                  { seg = 7; mantissa = Math.min(15, Math.round((abs - 16896) / 1024)) & 0x0f }
   return ((sign | (seg << 4) | mantissa) ^ 0x55) & 0xff
+}
+
+/**
+ * Pre-filter at source rate (telephone bandwidth 3400 Hz) then downsample to 8 kHz.
+ * Explicit anti-aliasing prevents high-frequency content from folding back into the
+ * audible band when the native resampler converts the signal to 8 kHz.
+ */
+export async function downsampleTo8k(buffer) {
+  const srcRate = buffer.sampleRate
+  // Apply 4th-order Linkwitz-Riley low-pass at 3400 Hz before downsampling
+  const filterCtx = new OfflineAudioContext(1, buffer.length, srcRate)
+  const filterSrc = filterCtx.createBufferSource()
+  filterSrc.buffer = buffer
+  const lpf1 = filterCtx.createBiquadFilter()
+  lpf1.type = 'lowpass'
+  lpf1.frequency.value = 3400
+  lpf1.Q.value = 0.707
+  const lpf2 = filterCtx.createBiquadFilter()
+  lpf2.type = 'lowpass'
+  lpf2.frequency.value = 3400
+  lpf2.Q.value = 0.707
+  filterSrc.connect(lpf1)
+  lpf1.connect(lpf2)
+  lpf2.connect(filterCtx.destination)
+  filterSrc.start(0)
+  const filtered = await filterCtx.startRendering()
+
+  const outLen = Math.ceil(buffer.duration * 8000)
+  const downCtx = new OfflineAudioContext(1, outLen, 8000)
+  const downSrc = downCtx.createBufferSource()
+  downSrc.buffer = filtered
+  downSrc.connect(downCtx.destination)
+  downSrc.start(0)
+  return downCtx.startRendering()
 }
 
 /**

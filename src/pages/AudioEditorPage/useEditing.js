@@ -2,7 +2,7 @@ import {useCallback} from 'react'
 import {UNDO_MAX, genId, nextColor} from './constants'
 import {TARGET_SAMPLE_RATE} from './audioOps'
 import {fmt, totalDur, buildMerged} from './utils'
-import {parseAlw, parseWav, pcmToAudioBuffer, encodeWav, encodeAlwBytes} from './wavUtils'
+import {parseAlw, parseWav, pcmToAudioBuffer, encodeWav, encodeAlwBytes, downsampleTo8k} from './wavUtils'
 import {
   normalizeBuffer,
   extractBuffer,
@@ -346,13 +346,7 @@ export function useEditing({
     try {
       const merged = buildMerged(clips)
       if (!merged) return
-      const outLen = Math.ceil(merged.duration * 8000)
-      const offCtx = new OfflineAudioContext(1, outLen, 8000)
-      const src = offCtx.createBufferSource()
-      src.buffer = merged
-      src.connect(offCtx.destination)
-      src.start(0)
-      const mono8k = await offCtx.startRendering()
+      const mono8k = await downsampleTo8k(merged)
       const blob = encodeAlwBytes(mono8k)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -384,13 +378,7 @@ export function useEditing({
     if (!clip) return
     setStatus('Кодування ALW…')
     try {
-      const outLen = Math.ceil(clip.buffer.duration * 8000)
-      const offCtx = new OfflineAudioContext(1, outLen, 8000)
-      const src = offCtx.createBufferSource()
-      src.buffer = clip.buffer
-      src.connect(offCtx.destination)
-      src.start(0)
-      const mono8k = await offCtx.startRendering()
+      const mono8k = await downsampleTo8k(clip.buffer)
       const blob = encodeAlwBytes(mono8k)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

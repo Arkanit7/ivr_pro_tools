@@ -1,7 +1,15 @@
 import {useState} from 'react'
 import {Button} from '@/components/ui/button'
 import {Textarea} from '@/components/ui/textarea'
-import {Play, Pause, RotateCcw, Download, Loader2, Wand2, ChevronDown} from 'lucide-react'
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Download,
+  Loader2,
+  Wand2,
+  ChevronDown,
+} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 
@@ -89,8 +97,18 @@ export default function AudioItemsList({
                   const item = groupItems[0]
                   groupItems.forEach((i) => {
                     onUpdateText(i.id, normalizeForTTS(item.text))
-                    if (item.textBefore) onUpdateContext(i.id, 'textBefore', normalizeForTTS(item.textBefore))
-                    if (item.textAfter) onUpdateContext(i.id, 'textAfter', normalizeForTTS(item.textAfter))
+                    if (item.textBefore)
+                      onUpdateContext(
+                        i.id,
+                        'textBefore',
+                        normalizeForTTS(item.textBefore),
+                      )
+                    if (item.textAfter)
+                      onUpdateContext(
+                        i.id,
+                        'textAfter',
+                        normalizeForTTS(item.textAfter),
+                      )
                   })
                 })
               }
@@ -115,7 +133,11 @@ export default function AudioItemsList({
           const playableItem = groupItems.find((i) => i.audioUrl)
           const dirty = groupItems[0].dirty && status === 'complete'
           const {label, className} = dirty
-            ? {label: 'Є зміни', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}
+            ? {
+                label: 'Є зміни',
+                className:
+                  'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+              }
             : STATUS_CONFIG[status]
 
           return (
@@ -211,8 +233,18 @@ export default function AudioItemsList({
                         const item = groupItems[0]
                         groupItems.forEach((i) => {
                           onUpdateText(i.id, normalizeForTTS(item.text))
-                          if (item.textBefore) onUpdateContext(i.id, 'textBefore', normalizeForTTS(item.textBefore))
-                          if (item.textAfter) onUpdateContext(i.id, 'textAfter', normalizeForTTS(item.textAfter))
+                          if (item.textBefore)
+                            onUpdateContext(
+                              i.id,
+                              'textBefore',
+                              normalizeForTTS(item.textBefore),
+                            )
+                          if (item.textAfter)
+                            onUpdateContext(
+                              i.id,
+                              'textAfter',
+                              normalizeForTTS(item.textAfter),
+                            )
                         })
                       }}
                       disabled={status === 'processing'}
