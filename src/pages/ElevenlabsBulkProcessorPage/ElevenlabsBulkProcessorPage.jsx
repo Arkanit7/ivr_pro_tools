@@ -207,6 +207,7 @@ export default function ElevenlabsBulkProcessorPage() {
 
     try {
       const sourceItem = audioItems.find((item) => item.id === itemIds[0])
+      if (!sourceItem) return
       const rawBlob = await generateSpeech(sourceItem.text, sourceItem.textBefore, sourceItem.textAfter)
 
       let playbackBlob
@@ -220,13 +221,16 @@ export default function ElevenlabsBulkProcessorPage() {
 
       const audioUrl = URL.createObjectURL(playbackBlob)
 
-      setAudioItems((prev) =>
-        prev.map((item) =>
+      setAudioItems((prev) => {
+        prev.forEach((item) => {
+          if (itemIds.includes(item.id) && item.audioUrl) URL.revokeObjectURL(item.audioUrl)
+        })
+        return prev.map((item) =>
           itemIds.includes(item.id)
             ? {...item, status: 'complete', audioBlob: rawBlob, audioUrl, dirty: false}
             : item,
-        ),
-      )
+        )
+      })
     } catch (error) {
       console.error(`Error generating audio for group ${itemIds}:`, error)
       setAudioItems((prev) =>
@@ -294,6 +298,7 @@ export default function ElevenlabsBulkProcessorPage() {
       const currentGroupIndex = audioItemGroups.findIndex((ids) =>
         ids.includes(activeAudioId),
       )
+      if (currentGroupIndex === -1) return
       for (let i = currentGroupIndex + 1; i < audioItemGroups.length; i++) {
         const item = audioItems.find(
           (it) => it.id === audioItemGroups[i][0] && it.audioUrl,
