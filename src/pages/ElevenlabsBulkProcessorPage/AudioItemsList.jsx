@@ -237,7 +237,8 @@ export default function AudioItemsList({
                       <>
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="secondary"
+                          className="col-span-2"
                           onClick={() => onPlay(playableItem.id)}
                         >
                           {isPlaying && playableItem.id === activeAudioId ? (
