@@ -175,7 +175,7 @@ export default function ElevenlabsBulkProcessorPage() {
     }
   }
 
-  const generateSpeech = async (text) => {
+  const generateSpeech = async (text, textBefore = '', textAfter = '') => {
     const fmt = SAVE_FORMATS.find((f) => f.id === saveFormat)
     const outputFormat = fmt?.outputFormat ?? 'wav_44100'
     const client = createElevenLabsClient()
@@ -185,6 +185,8 @@ export default function ElevenlabsBulkProcessorPage() {
       outputFormat,
       languageCode: 'uk',
       applyTextNormalization,
+      ...(textBefore.trim() && {previousText: textBefore.trim()}),
+      ...(textAfter.trim() && {nextText: textAfter.trim()}),
       voiceSettings: {
         speed,
         stability,
@@ -205,7 +207,7 @@ export default function ElevenlabsBulkProcessorPage() {
 
     try {
       const sourceItem = audioItems.find((item) => item.id === itemIds[0])
-      const rawBlob = await generateSpeech(sourceItem.text)
+      const rawBlob = await generateSpeech(sourceItem.text, sourceItem.textBefore, sourceItem.textAfter)
 
       let playbackBlob
       if (saveFormat === 'alw') {
@@ -221,7 +223,7 @@ export default function ElevenlabsBulkProcessorPage() {
       setAudioItems((prev) =>
         prev.map((item) =>
           itemIds.includes(item.id)
-            ? {...item, status: 'complete', audioBlob: rawBlob, audioUrl}
+            ? {...item, status: 'complete', audioBlob: rawBlob, audioUrl, dirty: false}
             : item,
         ),
       )
@@ -317,6 +319,14 @@ export default function ElevenlabsBulkProcessorPage() {
     )
   }
 
+  const updateItemContext = (itemId, field, value) => {
+    setAudioItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? {...item, [field]: value, dirty: true} : item,
+      ),
+    )
+  }
+
   const updateItemText = (itemId, newText) => {
     setAudioItems((prev) =>
       prev.map((item) =>
@@ -324,9 +334,7 @@ export default function ElevenlabsBulkProcessorPage() {
           ? {
               ...item,
               text: newText,
-              status: 'pending',
-              audioBlob: null,
-              audioUrl: null,
+              dirty: true,
             }
           : item,
       ),
@@ -401,6 +409,7 @@ export default function ElevenlabsBulkProcessorPage() {
                   onDownloadGroup={downloadGroup}
                   onDownloadAll={downloadAll}
                   onUpdateText={updateItemText}
+                  onUpdateContext={updateItemContext}
                 />
               </CardContent>
             </Card>
