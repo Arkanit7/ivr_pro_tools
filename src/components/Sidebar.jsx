@@ -35,7 +35,7 @@ function Sidebar() {
             )}
           >
             IVR Pro Tools{' '}
-            <span className="text-xs text-muted-foreground">v3.2</span>
+            <span className="text-xs text-muted-foreground">v3.2.1</span>
           </Link>
           <button
             onClick={() => setCollapsed((c) => !c)}
