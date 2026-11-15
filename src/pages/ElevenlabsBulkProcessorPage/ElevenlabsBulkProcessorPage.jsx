@@ -361,6 +361,10 @@ export default function ElevenlabsBulkProcessorPage() {
                   progress={progress}
                   file={file}
                   onClick={startBulkGeneration}
+                  completedCount={
+                    audioItems.filter((item) => item.status === 'complete').length
+                  }
+                  onDownloadAll={downloadAll}
                 />
 
                 <AudioItemsList
@@ -372,7 +376,6 @@ export default function ElevenlabsBulkProcessorPage() {
                   onPlayAll={onPlayAll}
                   onRegenerate={generateGroupAudio}
                   onDownloadGroup={downloadGroup}
-                  onDownloadAll={downloadAll}
                   onUpdateText={updateItemText}
                   onUpdateContext={updateItemContext}
                   contextSupported={getModel(model).supports.context}

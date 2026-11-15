@@ -66,7 +66,6 @@ export default function AudioItemsList({
   onPlay,
   onRegenerate,
   onDownloadGroup,
-  onDownloadAll,
   onUpdateText,
   onUpdateContext,
   contextSupported = true,
@@ -80,7 +79,6 @@ export default function AudioItemsList({
       return next
     })
 
-  const completedItems = items.filter((item) => item.status === 'complete')
   const resolvedGroups = groups.map((ids) =>
     ids.map((id) => items.find((i) => i.id === id)).filter(Boolean),
   )
@@ -120,12 +118,6 @@ export default function AudioItemsList({
               <Wand2 className="mr-1.5 h-3.5 w-3.5" />
               Нормалізувати все
             </Button>
-            {completedItems.length > 0 && (
-              <Button onClick={onDownloadAll} variant="outline" size="sm">
-                <Download className="mr-1.5 h-3.5 w-3.5" />
-                Завантажити все ({completedItems.length})
-              </Button>
-            )}
           </div>
         </div>
       )}

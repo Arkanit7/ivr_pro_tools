@@ -1,6 +1,6 @@
 import {useState, useRef, useEffect, useMemo} from 'react'
 import {useLocalStorage} from '@/hooks/useLocalStorage'
-import {Mic2, Wand2} from 'lucide-react'
+import {Download, Mic2, RotateCcw, Wand2} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
@@ -65,6 +65,21 @@ export default function TTSPage() {
 
   const {supports} = getModel(model)
   const contextHint = supports.context ? undefined : UNSUPPORTED_HINTS.context
+
+  // Everything that affects the generated audio; used to tell whether the result is stale.
+  const inputSignature = JSON.stringify([
+    textBefore,
+    text,
+    textAfter,
+    model,
+    saveFormat,
+    speed,
+    stability,
+    similarityBoost,
+    style,
+    textNormalization,
+  ])
+  const [generatedSignature, setGeneratedSignature] = useState(null)
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
@@ -172,6 +187,7 @@ export default function TTSPage() {
       }
 
       setAudioUrlClean(URL.createObjectURL(playbackBlob))
+      setGeneratedSignature(inputSignature)
       setStatusMsg('Готово.')
       setIsError(false)
     } catch (err) {
@@ -197,6 +213,9 @@ export default function TTSPage() {
         : null,
     [rawBytes],
   )
+
+  const resultReady =
+    Boolean(downloadBlob) && !isGenerating && generatedSignature === inputSignature
 
   const handleDownload = () => {
     if (!downloadBlob) return
@@ -342,20 +361,32 @@ export default function TTSPage() {
                 Нормалізувати текст
               </Button>
 
+              {/* Button order stays fixed; only the emphasis moves to the likely next step */}
               <div className="flex gap-2">
                 <Button
+                  variant={resultReady ? 'outline' : 'default'}
                   onClick={handleGenerate}
                   disabled={isGenerating || fileNameInvalid}
-                  className="h-10 flex-1"
+                  className={cn('h-10', resultReady ? 'px-4' : 'flex-1')}
                 >
-                  {isGenerating ? 'Генерація…' : 'Генерувати'}
+                  {isGenerating ? (
+                    'Генерація…'
+                  ) : resultReady ? (
+                    <>
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Згенерувати знову
+                    </>
+                  ) : (
+                    'Генерувати'
+                  )}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={resultReady ? 'default' : 'outline'}
                   onClick={handleDownload}
                   disabled={!downloadBlob}
-                  className="h-10 px-6"
+                  className={cn('h-10', resultReady ? 'flex-1' : 'px-6')}
                 >
+                  <Download className="mr-2 h-4 w-4" />
                   Завантажити
                 </Button>
               </div>
