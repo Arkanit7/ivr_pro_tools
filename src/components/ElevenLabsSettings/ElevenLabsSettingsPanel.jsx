@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select'
 import VoiceSettings from '@/components/ElevenLabsSettings/VoiceSettings'
 import TextNormalizationSelect from '@/components/ElevenLabsSettings/TextNormalizationSelect'
+import CreditsMeter from '@/components/ElevenLabsSettings/CreditsMeter'
 import {useElevenLabsSettings} from '@/context/ElevenLabsSettingsContext'
 import {MODELS, SAVE_FORMATS} from '@/lib/elevenlabsModels'
 
@@ -19,6 +20,8 @@ export default function ElevenLabsSettingsPanel() {
 
   return (
     <>
+      <CreditsMeter />
+
       {/* Model */}
       <div className="flex flex-col gap-3 p-1.5">
         <Label>Модель</Label>

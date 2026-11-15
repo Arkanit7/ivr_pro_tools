@@ -19,6 +19,7 @@ import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
 import {getModel, getSaveFormat} from '@/lib/elevenlabsModels'
 import {getDownloadBlockReason, getDuplicateBlockReason} from '@/lib/fileNames'
+import {refreshUsage} from '@/lib/elevenlabsUsage'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
@@ -199,6 +200,8 @@ export default function ElevenlabsBulkProcessorPage() {
           itemIds.includes(item.id) ? {...item, status: 'error'} : item,
         ),
       )
+    } finally {
+      refreshUsage()
     }
   }
 

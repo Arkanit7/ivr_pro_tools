@@ -15,6 +15,7 @@ import DisabledHint from '@/components/DisabledHint'
 import {useElevenLabsSettings} from '@/context/ElevenLabsSettingsContext'
 import {getModel, getSaveFormat, UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
 import {getDownloadBlockReason, isValidFileNameChar} from '@/lib/fileNames'
+import {refreshUsage} from '@/lib/elevenlabsUsage'
 
 // API key is read from env — exposes the key in the client bundle.
 // For local/dev use only; use a backend proxy for anything shared.
@@ -197,6 +198,7 @@ export default function TTSPage() {
       setIsError(true)
     } finally {
       setIsGenerating(false)
+      refreshUsage()
     }
   }
 
