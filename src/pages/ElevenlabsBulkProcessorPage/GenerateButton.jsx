@@ -1,5 +1,6 @@
 import {Button} from '@/components/ui/button'
 import {Play, Loader2, Download, RotateCcw} from 'lucide-react'
+import DisabledHint from '@/components/DisabledHint'
 
 export default function GenerateButton({
   status,
@@ -8,6 +9,7 @@ export default function GenerateButton({
   completedCount,
   onClick,
   onDownloadAll,
+  downloadBlockedReason,
 }) {
   const busy = status === 'processing' || status === 'testing'
 
@@ -15,9 +17,17 @@ export default function GenerateButton({
   if (status === 'complete' && completedCount > 0) {
     return (
       <div className="flex gap-2">
-        <Button className="h-12 flex-1 text-lg" onClick={onDownloadAll}>
-          <Download className="mr-2 h-6 w-6" /> Завантажити все ({completedCount})
-        </Button>
+        <div className="flex-1">
+          <DisabledHint hint={downloadBlockedReason}>
+            <Button
+              className="h-12 w-full text-lg"
+              disabled={Boolean(downloadBlockedReason)}
+              onClick={onDownloadAll}
+            >
+              <Download className="mr-2 h-6 w-6" /> Завантажити все ({completedCount})
+            </Button>
+          </DisabledHint>
+        </div>
         <Button
           variant="outline"
           className="h-12 px-4"

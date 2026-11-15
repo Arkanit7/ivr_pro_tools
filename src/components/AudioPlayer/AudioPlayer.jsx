@@ -8,6 +8,7 @@ import {
   memo,
 } from 'react'
 import {Play, Pause, Volume2, VolumeX, Download} from 'lucide-react'
+import DisabledHint from '@/components/DisabledHint'
 import {cn} from '@/lib/utils'
 import {useLocalStorage} from '@/hooks/useLocalStorage'
 import {saveAs} from 'file-saver'
@@ -107,6 +108,7 @@ const AudioPlayer = forwardRef(function AudioPlayer(
     downloadBlob,
     downloadName,
     getDownloadName,
+    downloadBlockedReason,
     onEnded,
     onPlayStateChange,
     autoPlay = false,
@@ -232,6 +234,7 @@ const AudioPlayer = forwardRef(function AudioPlayer(
   }, [])
 
   const handleDownload = () => {
+    if (downloadBlockedReason) return
     const name = getDownloadName ? getDownloadName() : downloadName
     if (downloadBlob && name) saveAs(downloadBlob, name)
   }
@@ -306,15 +309,18 @@ const AudioPlayer = forwardRef(function AudioPlayer(
 
       {/* Download */}
       {downloadBlob && (downloadName || getDownloadName) && (
-        <button
-          type="button"
-          aria-label={`Завантажити ${downloadName}`}
-          title={`Завантажити ${downloadName}`}
-          onClick={handleDownload}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Download className="h-4 w-4" />
-        </button>
+        <DisabledHint hint={downloadBlockedReason}>
+          <button
+            type="button"
+            aria-label={`Завантажити ${downloadName}`}
+            title={downloadBlockedReason ? undefined : `Завантажити ${downloadName}`}
+            onClick={handleDownload}
+            disabled={Boolean(downloadBlockedReason)}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+        </DisabledHint>
       )}
     </div>
   )

@@ -18,6 +18,7 @@ import AudioItemsList from '@/pages/ElevenlabsBulkProcessorPage/AudioItemsList'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
 import {getModel, getSaveFormat} from '@/lib/elevenlabsModels'
+import {getDownloadBlockReason, getDuplicateBlockReason} from '@/lib/fileNames'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
@@ -292,6 +293,13 @@ export default function ElevenlabsBulkProcessorPage() {
     )
   }
 
+  // Renaming only changes the saved file name, so generated audio stays valid.
+  const renameItem = (itemId, fileName) => {
+    setAudioItems((prev) =>
+      prev.map((item) => (item.id === itemId ? {...item, fileName} : item)),
+    )
+  }
+
   const updateItemText = (itemId, newText) => {
     setAudioItems((prev) =>
       prev.map((item) =>
@@ -334,6 +342,13 @@ export default function ElevenlabsBulkProcessorPage() {
     setStatus('complete')
   }
 
+  const completedItems = audioItems.filter((item) => item.status === 'complete')
+  const downloadAllBlockReason =
+    getDownloadBlockReason(
+      [...new Set(completedItems.map((item) => item.fileName))],
+      {allowDot: true},
+    ) ?? getDuplicateBlockReason(completedItems)
+
   const activeAudioItem = audioItems.find(
     (item) => item.id === activeAudioId && item.audioUrl,
   )
@@ -361,10 +376,9 @@ export default function ElevenlabsBulkProcessorPage() {
                   progress={progress}
                   file={file}
                   onClick={startBulkGeneration}
-                  completedCount={
-                    audioItems.filter((item) => item.status === 'complete').length
-                  }
+                  completedCount={completedItems.length}
                   onDownloadAll={downloadAll}
+                  downloadBlockedReason={downloadAllBlockReason}
                 />
 
                 <AudioItemsList
@@ -378,6 +392,7 @@ export default function ElevenlabsBulkProcessorPage() {
                   onDownloadGroup={downloadGroup}
                   onUpdateText={updateItemText}
                   onUpdateContext={updateItemContext}
+                  onRename={renameItem}
                   contextSupported={getModel(model).supports.context}
                 />
               </CardContent>
@@ -413,6 +428,10 @@ export default function ElevenlabsBulkProcessorPage() {
               src={activeAudioItem.audioUrl}
               downloadBlob={activeAudioItem.audioBlob}
               downloadName={toFileName(activeAudioItem)}
+              downloadBlockedReason={getDownloadBlockReason(
+                [activeAudioItem.fileName],
+                {allowDot: true},
+              )}
               autoPlay
               onEnded={handleAudioEnded}
               onPlayStateChange={setIsPlaying}

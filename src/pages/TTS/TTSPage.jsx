@@ -14,13 +14,15 @@ import ElevenLabsSettingsPanel from '@/components/ElevenLabsSettings/ElevenLabsS
 import DisabledHint from '@/components/DisabledHint'
 import {useElevenLabsSettings} from '@/context/ElevenLabsSettingsContext'
 import {getModel, getSaveFormat, UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
+import {getDownloadBlockReason, isValidFileNameChar} from '@/lib/fileNames'
 
 // API key is read from env — exposes the key in the client bundle.
 // For local/dev use only; use a backend proxy for anything shared.
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
-const VALID_FILENAME_CHAR = /^[a-zA-Z0-9_-]$/
+// Empty is fine: the download falls back to a timestamped name.
+const NAME_RULES = {allowEmpty: true}
 
 // Build an in-memory WAV blob from 16-bit PCM samples so the <audio> element can play A-law output.
 function pcm16ToWavBlob(pcm, sampleRate) {
@@ -198,8 +200,8 @@ export default function TTSPage() {
     }
   }
 
-  const fileNameInvalid =
-    fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
+  const downloadBlockReason = getDownloadBlockReason([fileName], NAME_RULES)
+  const fileNameInvalid = Boolean(downloadBlockReason)
   const {ext} = getSaveFormat(saveFormat)
   const downloadName = (fileName.trim() || 'IVR_Pro_Tools') + ext
   const getDownloadName = () =>
@@ -218,7 +220,7 @@ export default function TTSPage() {
     Boolean(downloadBlob) && !isGenerating && generatedSignature === inputSignature
 
   const handleDownload = () => {
-    if (!downloadBlob) return
+    if (!downloadBlob || fileNameInvalid) return
     const url = URL.createObjectURL(downloadBlob)
     const a = document.createElement('a')
     a.href = url
@@ -267,7 +269,7 @@ export default function TTSPage() {
                   </p>
                   <p className="font-mono text-sm leading-relaxed">
                     {[...fileName].map((char, i) => {
-                      const bad = !VALID_FILENAME_CHAR.test(char)
+                      const bad = !isValidFileNameChar(char)
                       const display =
                         char === ' '
                           ? '␣'
@@ -366,7 +368,7 @@ export default function TTSPage() {
                 <Button
                   variant={resultReady ? 'outline' : 'default'}
                   onClick={handleGenerate}
-                  disabled={isGenerating || fileNameInvalid}
+                  disabled={isGenerating}
                   className={cn('h-10', resultReady ? 'px-4' : 'flex-1')}
                 >
                   {isGenerating ? (
@@ -380,15 +382,19 @@ export default function TTSPage() {
                     'Генерувати'
                   )}
                 </Button>
-                <Button
-                  variant={resultReady ? 'default' : 'outline'}
-                  onClick={handleDownload}
-                  disabled={!downloadBlob}
-                  className={cn('h-10', resultReady ? 'flex-1' : 'px-6')}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Завантажити
-                </Button>
+                <div className={cn(resultReady && 'flex-1')}>
+                  <DisabledHint hint={downloadBlob ? downloadBlockReason : undefined}>
+                    <Button
+                      variant={resultReady ? 'default' : 'outline'}
+                      onClick={handleDownload}
+                      disabled={!downloadBlob || fileNameInvalid}
+                      className={cn('h-10', resultReady ? 'w-full' : 'px-6')}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Завантажити
+                    </Button>
+                  </DisabledHint>
+                </div>
               </div>
 
               {statusMsg && (
@@ -431,6 +437,7 @@ export default function TTSPage() {
               downloadBlob={downloadBlob}
               downloadName={downloadName}
               getDownloadName={getDownloadName}
+              downloadBlockedReason={downloadBlockReason}
               autoPlay
               className="flex-1"
             />

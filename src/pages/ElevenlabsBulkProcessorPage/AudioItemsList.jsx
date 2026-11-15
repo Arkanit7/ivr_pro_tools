@@ -1,7 +1,9 @@
 import {useState} from 'react'
 import {Button} from '@/components/ui/button'
 import {Textarea} from '@/components/ui/textarea'
+import {Input} from '@/components/ui/input'
 import {
+  Pencil,
   Play,
   Pause,
   RotateCcw,
@@ -14,16 +16,25 @@ import {cn} from '@/lib/utils'
 import normalizeForTTS from '@/lib/normalizeForTTS'
 import DisabledHint from '@/components/DisabledHint'
 import {UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
+import {
+  findConflictingNames,
+  getDownloadBlockReason,
+  isConflictingName,
+  isValidFileName,
+  isValidFileNameChar,
+} from '@/lib/fileNames'
 
-const VALID_FILENAME_CHAR = /^[a-zA-Z0-9_\-.]$/
+const NAME_RULES = {allowDot: true}
+const isValidChar = (char) => isValidFileNameChar(char, NAME_RULES)
 
 function FileNameDisplay({name}) {
-  const hasInvalid = [...name].some((c) => !VALID_FILENAME_CHAR.test(c))
+  if (!name) return <span className="text-destructive italic">без назви</span>
+  const hasInvalid = [...name].some((c) => !isValidChar(c))
   if (!hasInvalid) return <span className="truncate">{name}</span>
   return (
     <span className="font-mono">
       {[...name].map((char, i) => {
-        const bad = !VALID_FILENAME_CHAR.test(char)
+        const bad = !isValidChar(char)
         const display = char === ' ' ? '␣' : char === '\t' ? '⇥' : char
         return bad ? (
           <mark
@@ -37,6 +48,64 @@ function FileNameDisplay({name}) {
         )
       })}
     </span>
+  )
+}
+
+// Click a name to rename it; Enter or blur saves, Escape cancels.
+function FileNameEditor({name, duplicate, onRename}) {
+  const [draft, setDraft] = useState(null)
+  const invalid = !isValidFileName(name, NAME_RULES)
+
+  if (draft !== null) {
+    const commit = () => {
+      onRename(draft.trim())
+      setDraft(null)
+    }
+    return (
+      <Input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit()
+          if (e.key === 'Escape') setDraft(null)
+        }}
+        aria-invalid={!isValidFileName(draft.trim(), NAME_RULES)}
+        aria-label="Назва файлу"
+        className="h-7 w-56 font-mono text-sm"
+      />
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setDraft(name)}
+      title={
+        duplicate && !invalid
+          ? 'Ця назва вже використовується для іншого промпту — натисніть, щоб перейменувати'
+          : 'Натисніть, щоб перейменувати'
+      }
+      className={cn(
+        'inline-flex items-center gap-1 rounded px-1 hover:bg-muted',
+        invalid
+          ? 'ring-1 ring-destructive/50'
+          : duplicate && 'bg-amber-100 ring-1 ring-amber-500/60 dark:bg-amber-900/30',
+      )}
+    >
+      <FileNameDisplay name={name} />
+      <Pencil
+        className={cn(
+          'h-3 w-3 shrink-0',
+          invalid
+            ? 'text-destructive'
+            : duplicate
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-muted-foreground',
+        )}
+      />
+    </button>
   )
 }
 
@@ -68,9 +137,11 @@ export default function AudioItemsList({
   onDownloadGroup,
   onUpdateText,
   onUpdateContext,
+  onRename,
   contextSupported = true,
 }) {
   const contextHint = contextSupported ? undefined : UNSUPPORTED_HINTS.context
+  const conflictingNames = findConflictingNames(items)
   const [expandedContext, setExpandedContext] = useState(new Set())
   const toggleContext = (id) =>
     setExpandedContext((prev) => {
@@ -135,6 +206,10 @@ export default function AudioItemsList({
                   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
               }
             : STATUS_CONFIG[status]
+          const downloadBlockReason = getDownloadBlockReason(
+            groupItems.map((i) => i.fileName),
+            NAME_RULES,
+          )
 
           return (
             <div
@@ -149,11 +224,15 @@ export default function AudioItemsList({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">
+                    <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm font-medium">
                       {groupItems.map((item, i) => (
-                        <span key={item.id}>
-                          {i > 0 && ', '}
-                          <FileNameDisplay name={item.fileName} />
+                        <span key={item.id} className="inline-flex items-center">
+                          {i > 0 && <span className="mr-1">,</span>}
+                          <FileNameEditor
+                            name={item.fileName}
+                            duplicate={isConflictingName(item.fileName, conflictingNames)}
+                            onRename={(name) => onRename(item.id, name)}
+                          />
                         </span>
                       ))}
                     </div>
@@ -281,15 +360,19 @@ export default function AudioItemsList({
                             <Play className="h-4 w-4" />
                           )}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            onDownloadGroup(groupItems.map((i) => i.id))
-                          }
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
+                        <DisabledHint hint={downloadBlockReason}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="w-full"
+                            disabled={Boolean(downloadBlockReason)}
+                            onClick={() =>
+                              onDownloadGroup(groupItems.map((i) => i.id))
+                            }
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </DisabledHint>
                       </>
                     )}
                   </div>
