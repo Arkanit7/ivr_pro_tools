@@ -2,12 +2,15 @@ import router from './router'
 import {RouterProvider} from 'react-router'
 import {ThemeProvider} from '@/context/ThemeContext'
 import {AccentProvider} from '@/context/AccentContext'
+import {ElevenLabsSettingsProvider} from '@/context/ElevenLabsSettingsContext'
 
 function App() {
   return (
     <ThemeProvider>
       <AccentProvider>
-        <RouterProvider router={router} />
+        <ElevenLabsSettingsProvider>
+          <RouterProvider router={router} />
+        </ElevenLabsSettingsProvider>
       </AccentProvider>
     </ThemeProvider>
   )

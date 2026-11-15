@@ -10,31 +10,19 @@ import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card'
 import {Label} from '@/components/ui/label'
 import {Switch} from '@/components/ui/switch'
 import {TooltipProvider} from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
-import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNormalizationSelect'
+import ElevenLabsSettingsPanel from '@/components/ElevenLabsSettings/ElevenLabsSettingsPanel'
+import {useElevenLabsSettings} from '@/context/ElevenLabsSettingsContext'
 import FileUpload from '@/components/FileUpload'
 import GenerateButton from '@/pages/ElevenlabsBulkProcessorPage/GenerateButton'
 import AudioItemsList from '@/pages/ElevenlabsBulkProcessorPage/AudioItemsList'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
-import {MODELS, getModel} from '@/lib/elevenlabsModels'
+import {getModel, getSaveFormat} from '@/lib/elevenlabsModels'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
 const createElevenLabsClient = () => new ElevenLabsClient({apiKey: API_KEY})
-
-const SAVE_FORMATS = [
-  {id: 'wav', label: '.wav (44.1 kHz)', outputFormat: 'wav_44100'},
-  {id: 'alw', label: '.alw (A-law 8 kHz моно)', outputFormat: 'alaw_8000'},
-]
 
 function pcm16ToWavBlob(pcm, sampleRate) {
   const dataSize = pcm.length * 2
@@ -72,25 +60,17 @@ export default function ElevenlabsBulkProcessorPage() {
   const [progress, setProgress] = useState({current: 0, total: 0})
   const [audioItems, setAudioItems] = useState([])
   const [audioItemGroups, setAudioItemGroups] = useState([])
-  const [model, setModel] = useLocalStorage(
-    'bulk_model',
-    'eleven_multilingual_v2',
-  )
-  const [saveFormat, setSaveFormat] = useLocalStorage('bulk_saveFormat', 'wav')
-  const [speed, setSpeed] = useLocalStorage('vs_speed', 1.0)
-  const [stability, setStability] = useLocalStorage('vs_stability', 0.75)
-  const [similarityBoost, setSimilarityBoost] = useLocalStorage(
-    'vs_similarityBoost',
-    1,
-  )
-  const [styleExaggeration, setStyleExaggeration] = useLocalStorage(
-    'vs_styleExaggeration',
-    0,
-  )
-  const [applyTextNormalization, setApplyTextNormalization] = useLocalStorage(
-    'vs_applyTextNormalization',
-    'on',
-  )
+  const {
+    settings: {
+      model,
+      saveFormat,
+      speed,
+      stability,
+      similarityBoost,
+      style,
+      textNormalization,
+    },
+  } = useElevenLabsSettings()
   const [activeAudioId, setActiveAudioId] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [autoplay, setAutoplay] = useLocalStorage('bulk_autoplay', true)
@@ -114,20 +94,8 @@ export default function ElevenlabsBulkProcessorPage() {
     setActiveAudioId(null)
   }, [saveFormat])
 
-  const toFileName = (item) => {
-    const ext = saveFormat === 'alw' ? '.alw' : '.wav'
-    return item.fileName.replace(/\.(wav|alw)$/i, '') + ext
-  }
-
-  const resetToDefaults = () => {
-    setModel('eleven_multilingual_v2')
-    setSaveFormat('wav')
-    setSpeed(1.0)
-    setStability(0.75)
-    setSimilarityBoost(1)
-    setStyleExaggeration(0)
-    setApplyTextNormalization('on')
-  }
+  const toFileName = (item) =>
+    item.fileName.replace(/\.(wav|alw)$/i, '') + getSaveFormat(saveFormat).ext
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0]
@@ -168,8 +136,7 @@ export default function ElevenlabsBulkProcessorPage() {
   }
 
   const generateSpeech = async (text, textBefore = '', textAfter = '') => {
-    const fmt = SAVE_FORMATS.find((f) => f.id === saveFormat)
-    const outputFormat = fmt?.outputFormat ?? 'wav_44100'
+    const {outputFormat} = getSaveFormat(saveFormat)
     const {supports} = getModel(model)
     const client = createElevenLabsClient()
     const stream = await client.textToSpeech.convert(VOICE_ID, {
@@ -177,14 +144,14 @@ export default function ElevenlabsBulkProcessorPage() {
       modelId: model,
       outputFormat,
       languageCode: 'uk',
-      applyTextNormalization,
+      applyTextNormalization: textNormalization,
       ...(supports.context && textBefore.trim() && {previousText: textBefore.trim()}),
       ...(supports.context && textAfter.trim() && {nextText: textAfter.trim()}),
       voiceSettings: {
         stability,
         similarityBoost,
         ...(supports.speed && {speed}),
-        ...(supports.style && {style: styleExaggeration}),
+        ...(supports.style && {style}),
         ...(supports.speakerBoost && {useSpeakerBoost: true}),
       },
     })
@@ -423,62 +390,7 @@ export default function ElevenlabsBulkProcessorPage() {
             </p>
           </div>
 
-          {/* Model */}
-          <div className="flex flex-col gap-3 p-1.5">
-            <Label>Модель</Label>
-            <Select value={model} onValueChange={setModel}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MODELS.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Voice sliders */}
-          <VoiceSettings
-            model={model}
-            speed={speed}
-            setSpeed={setSpeed}
-            stability={stability}
-            setStability={setStability}
-            similarityBoost={similarityBoost}
-            setSimilarityBoost={setSimilarityBoost}
-            styleExaggeration={styleExaggeration}
-            setStyleExaggeration={setStyleExaggeration}
-          />
-
-          {/* Text normalization */}
-          <TextNormalizationSelect
-            applyTextNormalization={applyTextNormalization}
-            setApplyTextNormalization={setApplyTextNormalization}
-          />
-
-          {/* Save format */}
-          <div className="flex flex-col gap-3 p-1.5">
-            <Label>Зберегти як</Label>
-            <Select value={saveFormat} onValueChange={setSaveFormat}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SAVE_FORMATS.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button variant="ghost" onClick={resetToDefaults} className="w-full">
-            Скинути до стандартних
-          </Button>
+          <ElevenLabsSettingsPanel />
         </aside>
       </div>
 

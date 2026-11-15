@@ -9,18 +9,11 @@ import {Button} from '@/components/ui/button'
 import {Textarea} from '@/components/ui/textarea'
 import {Input} from '@/components/ui/input'
 import {Label} from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {TooltipProvider} from '@/components/ui/tooltip'
-import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
-import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNormalizationSelect'
+import ElevenLabsSettingsPanel from '@/components/ElevenLabsSettings/ElevenLabsSettingsPanel'
 import DisabledHint from '@/components/DisabledHint'
-import {MODELS, getModel, UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
+import {useElevenLabsSettings} from '@/context/ElevenLabsSettingsContext'
+import {getModel, getSaveFormat, UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
 
 // API key is read from env — exposes the key in the client bundle.
 // For local/dev use only; use a backend proxy for anything shared.
@@ -28,12 +21,6 @@ const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
 const VALID_FILENAME_CHAR = /^[a-zA-Z0-9_-]$/
-
-// .wav (44.1 kHz) requires a Pro tier or above on the ElevenLabs account; alaw_8000 does not.
-const SAVE_FORMATS = [
-  {id: 'alw', label: '.alw (A-law 8 kHz моно)', outputFormat: 'alaw_8000'},
-  {id: 'wav', label: '.wav (44.1 kHz)', outputFormat: 'wav_44100'},
-]
 
 // Build an in-memory WAV blob from 16-bit PCM samples so the <audio> element can play A-law output.
 function pcm16ToWavBlob(pcm, sampleRate) {
@@ -64,22 +51,17 @@ export default function TTSPage() {
   const [text, setText] = useLocalStorage('tts_text', '')
   const [textAfter, setTextAfter] = useLocalStorage('tts_textAfter', '')
   const [fileName, setFileName] = useLocalStorage('tts_fileName', 'output')
-  const [model, setModel] = useLocalStorage(
-    'tts_model',
-    'eleven_multilingual_v2',
-  )
-  const [stability, setStability] = useLocalStorage('tts_stability', 0.75)
-  const [similarityBoost, setSimilarityBoost] = useLocalStorage(
-    'tts_similarityBoost',
-    1.0,
-  )
-  const [style, setStyle] = useLocalStorage('tts_style', 0)
-  const [speed, setSpeed] = useLocalStorage('tts_speed', 1.0)
-  const [textNormalization, setTextNormalization] = useLocalStorage(
-    'tts_textNormalization',
-    'on',
-  )
-  const [saveFormat, setSaveFormat] = useLocalStorage('tts_saveFormat', 'alw')
+  const {
+    settings: {
+      model,
+      saveFormat,
+      speed,
+      stability,
+      similarityBoost,
+      style,
+      textNormalization,
+    },
+  } = useElevenLabsSettings()
 
   const {supports} = getModel(model)
   const contextHint = supports.context ? undefined : UNSUPPORTED_HINTS.context
@@ -139,8 +121,7 @@ export default function TTSPage() {
     setStatusMsg('Генерація…')
     setIsError(false)
 
-    const fmt = SAVE_FORMATS.find((f) => f.id === saveFormat)
-    const outputFormat = fmt?.outputFormat ?? 'alaw_8000'
+    const {outputFormat} = getSaveFormat(saveFormat)
 
     const body = {
       text: normalizeForTTS(text.trim()),
@@ -201,18 +182,9 @@ export default function TTSPage() {
     }
   }
 
-  const resetToDefaults = () => {
-    setModel('eleven_multilingual_v2')
-    setStability(0.75)
-    setSimilarityBoost(1.0)
-    setStyle(0)
-    setSpeed(1.0)
-    setTextNormalization('on')
-  }
-
   const fileNameInvalid =
     fileName !== '' && [...fileName].some((c) => !VALID_FILENAME_CHAR.test(c))
-  const ext = saveFormat === 'alw' ? '.alw' : '.wav'
+  const {ext} = getSaveFormat(saveFormat)
   const downloadName = (fileName.trim() || 'IVR_Pro_Tools') + ext
   const getDownloadName = () =>
     (fileName.trim() ||
@@ -410,60 +382,7 @@ export default function TTSPage() {
             </p>
           </div>
 
-          {/* Model */}
-          <div className="flex flex-col gap-3 p-1.5">
-            <Label>Модель</Label>
-            <Select value={model} onValueChange={setModel}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MODELS.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <VoiceSettings
-            model={model}
-            speed={speed}
-            setSpeed={setSpeed}
-            stability={stability}
-            setStability={setStability}
-            similarityBoost={similarityBoost}
-            setSimilarityBoost={setSimilarityBoost}
-            styleExaggeration={style}
-            setStyleExaggeration={setStyle}
-          />
-
-          <TextNormalizationSelect
-            applyTextNormalization={textNormalization}
-            setApplyTextNormalization={setTextNormalization}
-          />
-
-          {/* Save format */}
-          <div className="flex flex-col gap-3 p-1.5">
-            <Label>Зберегти як</Label>
-            <Select value={saveFormat} onValueChange={setSaveFormat}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SAVE_FORMATS.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button variant="ghost" onClick={resetToDefaults} className="w-full">
-            Скинути до стандартних
-          </Button>
+          <ElevenLabsSettingsPanel />
         </aside>
       </div>
 

@@ -29,7 +29,16 @@ export const MODELS = [
   },
 ]
 
-export const getModel = (id) => MODELS.find((m) => m.id === id) ?? MODELS[0]
+// .wav (44.1 kHz) requires a Pro tier or above on the ElevenLabs account; alaw_8000 does not.
+export const SAVE_FORMATS = [
+  {id: 'alw', label: '.alw (A-law 8 kHz моно)', outputFormat: 'alaw_8000', ext: '.alw'},
+  {id: 'wav', label: '.wav (44.1 kHz)', outputFormat: 'wav_44100', ext: '.wav'},
+]
+
+export const getSaveFormat = (id) =>
+  SAVE_FORMATS.find((f) => f.id === id) ?? SAVE_FORMATS[0]
+
+export const getModel =(id) => MODELS.find((m) => m.id === id) ?? MODELS[0]
 
 export const UNSUPPORTED_HINTS = {
   speed: 'Працює лише з моделями v2.x (Multilingual v2, Flash v2.5)',
