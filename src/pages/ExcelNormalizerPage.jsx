@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import * as XLSX from 'xlsx'
+import {ExcelWriter, downloadXlsx} from 'excel-bridge'
 import {
   Card,
   CardContent,
@@ -11,6 +11,7 @@ import {FileSpreadsheet} from 'lucide-react'
 import {PageShell} from '@/components/PageShell'
 import FileUpload from '@/components/FileUpload'
 import normalizeForTTS from '@/lib/normalizeForTTS'
+import readFirstSheetRows from '@/lib/readFirstSheetRows'
 
 const formatDate = () => {
   const now = new Date()
@@ -27,26 +28,22 @@ export default function ExcelNormalizerPage() {
     setFile(selectedFile)
     if (!selectedFile) return
 
-    const data = await selectedFile.arrayBuffer()
-    const workbook = XLSX.read(data)
-    const sheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[sheetName]
+    try {
+      const [header = [], ...rows] = await readFirstSheetRows(selectedFile)
+      const modifiedRows = rows.map((row) => {
+        if (row[1] != null) row[1] = normalizeForTTS(row[1])
+        return row
+      })
 
-    const jsonData = XLSX.utils.sheet_to_json(worksheet)
-    const modifiedData = jsonData.map((row) => {
-      const keys = Object.keys(row)
-      if (keys.length >= 2 && row[keys[1]] !== undefined) {
-        row[keys[1]] = normalizeForTTS(row[keys[1]])
-      }
-      return row
-    })
-
-    const newWorksheet = XLSX.utils.json_to_sheet(modifiedData)
-    const newWorkbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'ModifiedSheet')
-    const ext = selectedFile.name.match(/\.[^.]+$/)?.[0] ?? '.xlsx'
-    const baseName = selectedFile.name.replace(/\.[^.]+$/, '')
-    XLSX.writeFile(newWorkbook, `${baseName}_${formatDate()}${ext}`)
+      const blob = new ExcelWriter().createWorkbook([
+        {data: [header, ...modifiedRows], options: {name: 'ModifiedSheet'}},
+      ])
+      const baseName = selectedFile.name.replace(/\.[^.]+$/, '')
+      downloadXlsx(blob, `${baseName}_${formatDate()}.xlsx`)
+    } catch (error) {
+      console.error('Error processing Excel file:', error)
+      alert('Не вдалося обробити файл. Підтримуються лише файли .xlsx.')
+    }
   }
 
   return (

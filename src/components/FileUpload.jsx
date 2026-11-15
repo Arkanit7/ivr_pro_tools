@@ -23,7 +23,7 @@ export default function FileUpload({
     <div className="group relative">
       <input
         type="file"
-        accept=".xlsx, .xls"
+        accept=".xlsx"
         className="hidden"
         id={id}
         onChange={onFileChange}

@@ -1,6 +1,6 @@
 import {useState, useRef, useEffect} from 'react'
 import {useLocalStorage} from '@/hooks/useLocalStorage'
-import * as XLSX from 'xlsx'
+import readFirstSheetRows from '@/lib/readFirstSheetRows'
 import JSZip from 'jszip'
 import {saveAs} from 'file-saver'
 import {FileAudio} from 'lucide-react'
@@ -144,10 +144,7 @@ export default function ElevenlabsBulkProcessorPage() {
     }
 
     try {
-      const buffer = await selectedFile.arrayBuffer()
-      const workbook = XLSX.read(buffer)
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-      const rawData = XLSX.utils.sheet_to_json(worksheet, {header: 1})
+      const rawData = await readFirstSheetRows(selectedFile)
       const rows = rawData
         .slice(1)
         .filter(([, text]) => text && text.toString().trim() !== '')
