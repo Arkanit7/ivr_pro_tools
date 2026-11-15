@@ -19,6 +19,8 @@ import {
 import {TooltipProvider} from '@/components/ui/tooltip'
 import VoiceSettings from '@/pages/ElevenlabsBulkProcessorPage/VoiceSettings'
 import TextNormalizationSelect from '@/pages/ElevenlabsBulkProcessorPage/TextNormalizationSelect'
+import DisabledHint from '@/components/DisabledHint'
+import {MODELS, getModel, UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
 
 // API key is read from env — exposes the key in the client bundle.
 // For local/dev use only; use a backend proxy for anything shared.
@@ -26,12 +28,6 @@ const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
 const VALID_FILENAME_CHAR = /^[a-zA-Z0-9_-]$/
-
-const MODELS = [
-  {id: 'eleven_multilingual_v2', label: 'Multilingual v2'},
-  {id: 'eleven_flash_v2_5', label: 'Flash v2.5'},
-  {id: 'eleven_v3', label: 'v3 (alpha)'},
-]
 
 // .wav (44.1 kHz) requires a Pro tier or above on the ElevenLabs account; alaw_8000 does not.
 const SAVE_FORMATS = [
@@ -84,6 +80,9 @@ export default function TTSPage() {
     'on',
   )
   const [saveFormat, setSaveFormat] = useLocalStorage('tts_saveFormat', 'alw')
+
+  const {supports} = getModel(model)
+  const contextHint = supports.context ? undefined : UNSUPPORTED_HINTS.context
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
@@ -151,13 +150,13 @@ export default function TTSPage() {
       voice_settings: {
         stability,
         similarity_boost: similarityBoost,
-        style,
-        use_speaker_boost: true,
-        speed,
+        ...(supports.style && {style}),
+        ...(supports.speakerBoost && {use_speaker_boost: true}),
+        ...(supports.speed && {speed}),
       },
     }
-    if (textBefore.trim()) body.previous_text = textBefore.trim()
-    if (textAfter.trim()) body.next_text = textAfter.trim()
+    if (supports.context && textBefore.trim()) body.previous_text = textBefore.trim()
+    if (supports.context && textAfter.trim()) body.next_text = textAfter.trim()
 
     try {
       const res = await fetch(
@@ -310,12 +309,15 @@ export default function TTSPage() {
                   — не озвучується
                 </span>
               </Label>
-              <Textarea
-                value={textBefore}
-                onChange={(e) => setTextBefore(e.target.value)}
-                rows={1}
-                className="min-h-9 resize-y"
-              />
+              <DisabledHint hint={contextHint}>
+                <Textarea
+                  value={textBefore}
+                  onChange={(e) => setTextBefore(e.target.value)}
+                  rows={1}
+                  className="min-h-9 resize-y"
+                  disabled={!supports.context}
+                />
+              </DisabledHint>
             </div>
 
             {/* Main text */}
@@ -340,12 +342,15 @@ export default function TTSPage() {
                   — не озвучується
                 </span>
               </Label>
-              <Textarea
-                value={textAfter}
-                onChange={(e) => setTextAfter(e.target.value)}
-                rows={1}
-                className="min-h-9 resize-y"
-              />
+              <DisabledHint hint={contextHint}>
+                <Textarea
+                  value={textAfter}
+                  onChange={(e) => setTextAfter(e.target.value)}
+                  rows={1}
+                  className="min-h-9 resize-y"
+                  disabled={!supports.context}
+                />
+              </DisabledHint>
             </div>
 
             {/* Actions */}
@@ -423,6 +428,7 @@ export default function TTSPage() {
           </div>
 
           <VoiceSettings
+            model={model}
             speed={speed}
             setSpeed={setSpeed}
             stability={stability}

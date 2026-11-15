@@ -12,6 +12,8 @@ import {
 } from 'lucide-react'
 import {cn} from '@/lib/utils'
 import normalizeForTTS from '@/lib/normalizeForTTS'
+import DisabledHint from '@/components/DisabledHint'
+import {UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
 
 const VALID_FILENAME_CHAR = /^[a-zA-Z0-9_\-.]$/
 
@@ -67,7 +69,9 @@ export default function AudioItemsList({
   onDownloadAll,
   onUpdateText,
   onUpdateContext,
+  contextSupported = true,
 }) {
+  const contextHint = contextSupported ? undefined : UNSUPPORTED_HINTS.context
   const [expandedContext, setExpandedContext] = useState(new Set())
   const toggleContext = (id) =>
     setExpandedContext((prev) => {
@@ -176,17 +180,20 @@ export default function AudioItemsList({
                   </div>
 
                   {expandedContext.has(groupItems[0].id) && (
-                    <Textarea
-                      value={groupItems[0].textBefore ?? ''}
-                      onChange={(e) =>
-                        groupItems.forEach((i) =>
-                          onUpdateContext(i.id, 'textBefore', e.target.value),
-                        )
-                      }
-                      rows={1}
-                      className="min-h-9 resize-y text-sm text-muted-foreground"
-                      placeholder="Контекст до — не озвучується"
-                    />
+                    <DisabledHint hint={contextHint}>
+                      <Textarea
+                        value={groupItems[0].textBefore ?? ''}
+                        onChange={(e) =>
+                          groupItems.forEach((i) =>
+                            onUpdateContext(i.id, 'textBefore', e.target.value),
+                          )
+                        }
+                        rows={1}
+                        className="min-h-9 resize-y text-sm text-muted-foreground"
+                        placeholder="Контекст до — не озвучується"
+                        disabled={!contextSupported}
+                      />
+                    </DisabledHint>
                   )}
 
                   <Textarea
@@ -201,17 +208,20 @@ export default function AudioItemsList({
                   />
 
                   {expandedContext.has(groupItems[0].id) && (
-                    <Textarea
-                      value={groupItems[0].textAfter ?? ''}
-                      onChange={(e) =>
-                        groupItems.forEach((i) =>
-                          onUpdateContext(i.id, 'textAfter', e.target.value),
-                        )
-                      }
-                      rows={1}
-                      className="min-h-9 resize-y text-sm text-muted-foreground"
-                      placeholder="Контекст після — не озвучується"
-                    />
+                    <DisabledHint hint={contextHint}>
+                      <Textarea
+                        value={groupItems[0].textAfter ?? ''}
+                        onChange={(e) =>
+                          groupItems.forEach((i) =>
+                            onUpdateContext(i.id, 'textAfter', e.target.value),
+                          )
+                        }
+                        rows={1}
+                        className="min-h-9 resize-y text-sm text-muted-foreground"
+                        placeholder="Контекст після — не озвучується"
+                        disabled={!contextSupported}
+                      />
+                    </DisabledHint>
                   )}
                 </div>
 

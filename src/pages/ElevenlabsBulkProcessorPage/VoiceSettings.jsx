@@ -1,35 +1,47 @@
 import {Slider} from '@/components/ui/slider'
 import {Label} from '@/components/ui/label'
 import {Tooltip, TooltipContent, TooltipTrigger} from '@/components/ui/tooltip'
+import DisabledHint from '@/components/DisabledHint'
+import {getModel, UNSUPPORTED_HINTS} from '@/lib/elevenlabsModels'
 
-function SliderField({id, label, tooltip, value, displayValue, onValueChange, min, max, step}) {
+function SliderField({id, label, tooltip, disabledHint, value, displayValue, onValueChange, min, max, step}) {
+  const disabled = Boolean(disabledHint)
   return (
-    <div className="flex flex-col gap-3 p-1.5">
-      <div className="flex items-center justify-between gap-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Label
-              htmlFor={id}
-              className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2"
-            >
+    <DisabledHint hint={disabledHint}>
+      <div className="flex flex-col gap-3 p-1.5">
+        <div className="flex items-center justify-between gap-4">
+          {disabled ? (
+            <Label htmlFor={id} className="text-muted-foreground">
               {label}
             </Label>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltip}</p>
-          </TooltipContent>
-        </Tooltip>
-        <span className="tabular-nums text-sm text-muted-foreground">{displayValue}</span>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Label
+                  htmlFor={id}
+                  className="cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2"
+                >
+                  {label}
+                </Label>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          <span className="tabular-nums text-sm text-muted-foreground">{displayValue}</span>
+        </div>
+        <Slider
+          id={id}
+          value={[value]}
+          onValueChange={([v]) => onValueChange(v)}
+          min={min}
+          max={max}
+          step={step}
+          disabled={disabled}
+        />
       </div>
-      <Slider
-        id={id}
-        value={[value]}
-        onValueChange={([v]) => onValueChange(v)}
-        min={min}
-        max={max}
-        step={step}
-      />
-    </div>
+    </DisabledHint>
   )
 }
 
@@ -43,6 +55,7 @@ const SLIDERS = [
     max: 1.2,
     step: 0.01,
     key: 'speed',
+    requires: 'speed',
     format: (v) => v.toFixed(2),
   },
   {
@@ -76,11 +89,13 @@ const SLIDERS = [
     max: 1,
     step: 0.01,
     key: 'styleExaggeration',
+    requires: 'style',
     format: (v) => `${(v * 100).toFixed()}%`,
   },
 ]
 
 export default function VoiceSettings({
+  model,
   speed,
   setSpeed,
   stability,
@@ -97,15 +112,17 @@ export default function VoiceSettings({
     similarityBoost: setSimilarityBoost,
     styleExaggeration: setStyleExaggeration,
   }
+  const {supports} = getModel(model)
 
   return (
     <div className="space-y-2">
-      {SLIDERS.map(({id, label, tooltip, min, max, step, key, format}) => (
+      {SLIDERS.map(({id, label, tooltip, min, max, step, key, requires, format}) => (
         <SliderField
           key={id}
           id={id}
           label={label}
           tooltip={tooltip}
+          disabledHint={requires && !supports[requires] ? UNSUPPORTED_HINTS[requires] : undefined}
           value={values[key]}
           displayValue={format(values[key])}
           onValueChange={setters[key]}

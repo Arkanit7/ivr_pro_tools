@@ -24,17 +24,12 @@ import GenerateButton from '@/pages/ElevenlabsBulkProcessorPage/GenerateButton'
 import AudioItemsList from '@/pages/ElevenlabsBulkProcessorPage/AudioItemsList'
 import AudioPlayer from '@/components/AudioPlayer/AudioPlayer'
 import {parseAlw} from '@/pages/AudioEditorPage/wavUtils'
+import {MODELS, getModel} from '@/lib/elevenlabsModels'
 
 const API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY
 const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID
 
 const createElevenLabsClient = () => new ElevenLabsClient({apiKey: API_KEY})
-
-const MODELS = [
-  {id: 'eleven_multilingual_v2', label: 'Multilingual v2'},
-  {id: 'eleven_flash_v2_5', label: 'Flash v2.5'},
-  {id: 'eleven_v3', label: 'v3 (alpha)'},
-]
 
 const SAVE_FORMATS = [
   {id: 'wav', label: '.wav (44.1 kHz)', outputFormat: 'wav_44100'},
@@ -175,6 +170,7 @@ export default function ElevenlabsBulkProcessorPage() {
   const generateSpeech = async (text, textBefore = '', textAfter = '') => {
     const fmt = SAVE_FORMATS.find((f) => f.id === saveFormat)
     const outputFormat = fmt?.outputFormat ?? 'wav_44100'
+    const {supports} = getModel(model)
     const client = createElevenLabsClient()
     const stream = await client.textToSpeech.convert(VOICE_ID, {
       text,
@@ -182,14 +178,14 @@ export default function ElevenlabsBulkProcessorPage() {
       outputFormat,
       languageCode: 'uk',
       applyTextNormalization,
-      ...(textBefore.trim() && {previousText: textBefore.trim()}),
-      ...(textAfter.trim() && {nextText: textAfter.trim()}),
+      ...(supports.context && textBefore.trim() && {previousText: textBefore.trim()}),
+      ...(supports.context && textAfter.trim() && {nextText: textAfter.trim()}),
       voiceSettings: {
-        speed,
         stability,
         similarityBoost,
-        useSpeakerBoost: true,
-        style: styleExaggeration,
+        ...(supports.speed && {speed}),
+        ...(supports.style && {style: styleExaggeration}),
+        ...(supports.speakerBoost && {useSpeakerBoost: true}),
       },
     })
     return new Response(stream).blob()
@@ -412,6 +408,7 @@ export default function ElevenlabsBulkProcessorPage() {
                   onDownloadAll={downloadAll}
                   onUpdateText={updateItemText}
                   onUpdateContext={updateItemContext}
+                  contextSupported={getModel(model).supports.context}
                 />
               </CardContent>
             </Card>
@@ -445,6 +442,7 @@ export default function ElevenlabsBulkProcessorPage() {
 
           {/* Voice sliders */}
           <VoiceSettings
+            model={model}
             speed={speed}
             setSpeed={setSpeed}
             stability={stability}
